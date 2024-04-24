@@ -1,22 +1,16 @@
 <script setup>
 import { ref } from "vue";
+import { createOpenAI } from "../utils/LLMService.js";
+import {  summarizerPrompt,correctorPrompt, personalInfoOutputParser } from "../utils/prompts.js";
 import ChatInterface from "../components/ChatInterface.vue";
-import { ChatOpenAI, OpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { StructuredOutputParser } from "langchain/output_parsers"
+import { getEmptyKeys } from "../utils/special.js";
 
-const apiKey = "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"
-console.log({ apiKey });
-
-const prompt = ChatPromptTemplate.fromTemplate(
-    "Aufgabe: Gegeben ist ein User Input. Fasse die Informationen des Users als JSON-Datei zusammen\n",
-    "UserInput: {userInput}\n",
-);
-
-const model = new OpenAI({ openAIApiKey: apiKey, model: "gpt-4"});
+const model = createOpenAI()
 
 const steps = ref([
-  { title: "Why App", status: "todo", question: "Warum benutzt du diese App?", reqInfos: ["motivation"]},
   {
     title: "Personal",
     status: "todo",
@@ -34,35 +28,32 @@ const steps = ref([
 ]);
 
 
+
 const chatConversation = ref([
   { message: steps.value[0].question, position: "start" },
 ]);
 
 const userInput = ref("");
 
-const questionAnsweredTemplate = ChatPromptTemplate.fromTemplate(
-    "UserInput: {userInput}\n" + 
-    "Frage: {question}\n" + 
-    "Benötigte Informationen: {reqInfos}\n" + 
-    "Du bist ein freundlicher Agent der dem User hilft seine Informationen zu sammeln\n",
-    "Aufgabe: Ein User hat eine Frage beantwortet. Bitte überprüfe ob alle Informationen vorhanden sind\n" + 
-    "Wenn nicht alle Informationen vorhanden sind stelle eine Frage mit der der User die fehlende Information beantworten kann\n" + 
-    "Wenn alle Informationen vorhanden sind oder es keine benötigten Informationen gibt, gibt nur ferig aus\n",
-);
-
-const questionAnswered = async (userInput,question,reqInfos) => {
-    if (reqInfos.length === 0) {
-        return "Danke für deine Information"
-    }
-    const chain = questionAnsweredTemplate.pipe(model);
-    const result = await chain.invoke({ userInput, question, reqInfos });
-    return result
-}
-
 const handleUserMessage = async (userMessage) => {
     const {question , reqInfos} = steps.value.find((step) => step.status === "todo");
-    const res = await questionAnswered(userMessage, question, reqInfos);
+    const chain = summarizerPrompt.pipe(model).pipe(personalInfoOutputParser)
+    const res = await chain.invoke({question, userInput: userMessage, format_instructions: personalInfoOutputParser.getFormatInstructions()})
+    console.log(res)
+    const emptyKeys = getEmptyKeys(res)
+    if (emptyKeys.length === 0) {
+
+    }
+    console.log(emptyKeys)
+    const nextQuestions = emptyKeys.forEach(async key => {
+      const correctorChain = correctorPrompt.pipe(model).pipe(new StringOutputParser())
+      const aiResponse = await correctorChain.invoke({ information: key})
+      console.log(aiResponse)
+    })
+
     addMessage(res, "start");
+    //const resCorr = await correctorChain.invoke({jsonData: JSON.stringify(res)})
+    //console.log(resCorr)
 }
 
 const addMessage = (message,position) => {
