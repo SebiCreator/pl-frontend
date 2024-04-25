@@ -61,29 +61,19 @@ const steps = ref([
 
 const jsonAsker1 = new JsonAsker("Erzähle etwas über dich als Person",personalInfoOutputParser,{ user: "end", ai: "start"})
 
-/*
-const chatConversation = ref([
-  { message: steps.value[0].question, position: "start" },
-]);
-*/
-
-const chatConversation = ref(jsonAsker1.chatConversation);
-
+const chatConversation = ref(jsonAsker1.getConversationHistory());
 const userInput = ref("");
 
-
-watch(() => jsonAsker1.chatConversation, (newValue) => {
-    chatConversation.value = newValue;
-});
 
 const submit = async () => {
   const newMessage = userInput.value;
   if (newMessage) {
-    chatConversation.value.push({ msg: newMessage, position: "end" });
-    await jsonAsker1.nextQuestion(userInput.value);
+    jsonAsker1.addUserMsgToConversation(newMessage);
+    chatConversation.value = jsonAsker1.getConversationHistory()
+    await jsonAsker1.nextQuestion(userInput.value,{pushBefore: true});
     userInput.value = "";
     console.log("setting chatConversation");
-    chatConversation.value = jsonAsker1.chatConversation;
+    chatConversation.value = jsonAsker1.getConversationHistory()
   }
 };
 </script>
@@ -127,6 +117,7 @@ const submit = async () => {
             statement.position === 'start' ? 'chat-start' : 'chat-end'
           }`"
         >
+        {{ chatConversation}}
           <div
             :class="`chat-bubble ${
               statement.position === 'start' ? 'bg-amber-800' : 'chat-end'

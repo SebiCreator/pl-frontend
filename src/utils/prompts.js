@@ -1,6 +1,7 @@
 import { StructuredOutputParser } from "langchain/output_parsers"
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { late, z } from "zod"
+import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 
 

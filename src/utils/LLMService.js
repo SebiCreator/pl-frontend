@@ -4,7 +4,10 @@ import { getEmptyKeys } from "./special";
 import { summarizerPrompt, correctorPrompt } from "./prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "langchain/chains";
-import { MemoryVectorStore } from "@langchain/core/memory";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 
 
@@ -52,29 +55,71 @@ function combineObjects(obj1, obj2) {
 }
 
 
-
-// Add Converstation History TODO
-
-// Create Vector Store
-const vectorstore = await MemoryVectorStore.fromDocuments(
-  [],
-  createEmbeddings()
-);
-
-const retriever = vectorstore.asRetriever({ k: 2 });
-
 class JsonAsker {
-    constructor(firstQuestion, outputParser, messageKeys={user: "end", ai: "start"}) {
+    static async withConverstationMemory(firstQuestion, outputParser, messageKeys = { user: "end", ai: "start" }) {
+        const embeddings = createEmbeddings()
+        const model = createChatOpenAI()
+        const jsonAsker = new JsonAsker(firstQuestion, outputParser, messageKeys)
+        const vectorstore = await MemoryVectorStore.fromDocuments(
+            [],
+            embeddings
+        );
+        const retriever = vectorstore.asRetriever({ k: 2 });
+        const retrieverPrompt = ChatPromptTemplate.fromMessages([
+            new MessagesPlaceholder("chat_history"),
+            ["user", "{input}"],
+            [
+                "user",
+                "Given the above conversation, generate a search query to look up in order to get information relevant to the conversation",
+            ],
+        ]);
+
+        const retrieverChain = await createHistoryAwareRetriever({
+            llm: model,
+            retriever,
+            rephrasePrompt: retrieverPrompt,
+        });
+
+
+        const chatHistory = [
+            new HumanMessage("What does LCEL stand for?"),
+            new AIMessage("LangChain Expression Language"),
+        ];
+
+
+        const prompt = ChatPromptTemplate.fromMessages([
+            [
+                "system",
+                "Answer the user's questions based on the following context: {context}.",
+            ],
+            new MessagesPlaceholder("chat_history"),
+            ["user", "{input}"],
+        ]);
+
+
+        const chain = await createStuffDocumentsChain({
+            llm: model,
+            prompt: prompt,
+        });
+
+        const conversationChain = await createRetrievalChain({
+            combineDocsChain: chain,
+            retriever: retrieverChain,
+        });
+
+        jsonAsker.summarizerChain = conversationChain
+        return jsonAsker
+    }
+    constructor(firstQuestion, outputParser, messageKeys = { user: "end", ai: "start" }) {
         const chatModel = createChatOpenAI()
         const llmModel = createOpenAI()
         this.logger = new Logger({ context: "JsonAsker", enabled: true })
         this.outputParser = outputParser
         this.summarizerChain = summarizerPrompt.pipe(llmModel).pipe(outputParser)
-        this.summarizerChain = new LLMChain({ llm: llmModel, memory: llmMemory, prompt: summarizerPrompt, outputParser: outputParser })
         this.corretionChain = correctorPrompt.pipe(chatModel).pipe(new StringOutputParser())
         this.json = {}
         this.nextQuestions = []
-        this.chatConversation = [{ msg: firstQuestion, position: messageKeys.ai }]
+        this.chatConversation = [new AIMessage(firstQuestion)]
         this.done = false
         this.firstQuestionDone = false
         this.currentQuestion = firstQuestion
@@ -82,13 +127,32 @@ class JsonAsker {
     }
 
 
+
+
     async updateJson(data) {
         this.json = combineObjects(this.json, data)
     }
 
-    async nextQuestion(userInput) {
+    formatMessage(message) {
+        if (message instanceof HumanMessage) {
+            return { msg: message.content, position: this.messageKeys.user }
+        } else if (message instanceof AIMessage) {
+            return { msg: message.content, position: this.messageKeys.ai }
+        } else {
+            throw new Error("Invalid message type")
+        }
+    }
+
+    getConversationHistory() {
+        const r =   this.chatConversation.map(element => this.formatMessage(element))
+        console.log({ r, cc: this.chatConversation })
+        return r
+    }
+
+    async nextQuestion(userInput, { pushBefore }) {
+        pushBefore ? this.addUserMsgToConversation(userInput) : null
         this.logger.log("User input", { userInput, chatConversation: this.chatConversation });
-    
+
         if (this.nextQuestions.length === 0 && !this.firstQuestionDone) {
             this.logger.log("First question");
             await this.firstQuestion(userInput);
@@ -98,38 +162,50 @@ class JsonAsker {
                 this.logger.log("Result from summarizer", { result });
                 this.updateJson(result);
                 this.currentQuestion = this.nextQuestions.pop();
-                this.addToConversation(this.currentQuestion)
+                this.addAIMsgToConversation(this.currentQuestion)
             } catch (error) {
-                // Handle errors here
-                console.error("An error occurred:", error);
+                this.recoverFromError(error)
+                return
             }
         }
     }
 
-    async addToConversation(aiInput) {
-        this.chatConversation.push({ msg: aiInput, position: this.messageKeys.ai });
+    async addAIMsgToConversation(aiInput) {
+        console.log("Adding AI message", aiInput)
+        this.conversationChain.push(AIMessage(aiInput))
     }
 
-    async recoverFromError() {
-       if(this.json == {}) {
+    async addUserMsgToConversation(userInput) {
+        this.conversationChain.push(HumanMessage(userInput))
+    }
+
+    async recoverFromError(error) {
+        this.logger.error("Error", { error })
+        if (this.json == {}) {
             this.nextQuestions = [] // Start again with first question if no data has been collected
-            
-       } else {
-            this.addToConversation("Sorry something went wrong")
+
+        } else {
+            this.addAIMsgToConversation("Sorry something went wrong")
             await this.createQuestionsFromJson()
             this.currentQuestion = this.nextQuestions.pop()
-            this.addToConversation(this.currentQuestion)
-       }
+            this.addAIMsgToConversation(this.currentQuestion)
+        }
 
     }
-    
+
     async firstQuestion(userInput) {
-        const response = await this.summarizerChain.invoke({ format_instructions: this.outputParser, userInput: userInput })
+        try {
+            const response = await this.summarizerChain.invoke({ format_instructions: this.outputParser, userInput: userInput })
+        } catch (error) {
+            this.recoverFromError(error)
+            return
+        }
         this.updateJson(response)
         await this.createQuestionsFromJson()
         this.logger.log("Poping first question")
         this.currentQuestion = this.nextQuestions.pop()
-        this.addToConversation(this.currentQuestion)
+        console.log("Current question", this.currentQuestion)
+        this.addAIMsgToConversation(this.currentQuestion)
         this.firstQuestionDone = true
         this.logger.log("First question done", { chatConversation: this.chatConversation })
     }
@@ -140,11 +216,17 @@ class JsonAsker {
             this.done = true
             return
         }
-        for (const key of emptyKeys) {
-            const question = await this.corretionChain.invoke({ information: key })
-            this.nextQuestions.push(question.toString())
-            this.logger.log("Question created", { key, question })
-        }
+
+        emptyKeys.forEach(async key => {
+            try {
+                const question = await this.corretionChain.invoke({ information: key })
+                this.nextQuestions.push(question.toString())
+                this.logger.log("Question created", { key, question })
+            } catch (error) {
+                this.recoverFromError(error)
+                return
+            }
+        })
         this.logger.log("Questions created", { nextQuestions: this.nextQuestions })
     }
 }
