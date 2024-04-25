@@ -1,3 +1,5 @@
+const nullNumber = -1;
+
 function getEmptyKeys(jsonObject) {
     let emptyKeys = [];
   
@@ -6,7 +8,7 @@ function getEmptyKeys(jsonObject) {
         if (typeof obj[key] === 'object' && obj[key] !== null) {
           checkEmpty(obj[key], parentKey + '.' + key);
         } else {
-          if (obj[key] === '' || obj[key] === null || obj[key] === undefined) {
+          if (obj[key] === '' || obj[key] === null || obj[key] === undefined || obj[key] === nullNumber) {
             emptyKeys.push(parentKey + '.' + key);
           }
         }
