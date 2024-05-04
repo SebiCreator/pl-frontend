@@ -11,26 +11,8 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { StructuredOutputParser } from "langchain/output_parsers";
 import { getEmptyKeys } from "../utils/special.js";
+import JsonViewer from "../components/JsonViewer.vue";
 
-function combineObjects(obj1, obj2) {
-    const combinedObj = {};
-
-    for (const key in obj1) {
-        if (obj1.hasOwnProperty(key)) {
-            combinedObj[key] = (obj1[key] === '' || obj1[key] === -1 || obj1[key] === null || obj1[key] === undefined) ? obj2[key] : obj1[key];
-        }
-    }
-
-    for (const key in obj2) {
-        if (obj2.hasOwnProperty(key) && !obj1.hasOwnProperty(key)) {
-            combinedObj[key] = (obj2[key] === '' || obj2[key] === -1 || obj2[key] === null || obj2[key] === undefined) ? obj1[key] : obj2[key];
-        }
-    }
-
-    return combinedObj;
-}
-
-const model = createOpenAI();
 
 const steps = ref([
   {
@@ -59,23 +41,30 @@ const steps = ref([
   },
 ]);
 
-const jsonAsker1 = new JsonAsker("Erzähle etwas über dich als Person",personalInfoOutputParser,{ user: "end", ai: "start"})
+const jsonAsker1 = new JsonAsker(
+  "Erzähle etwas über dich als Person",
+  personalInfoOutputParser,
+  { user: "end", ai: "start" }
+);
 
 const chatConversation = ref(jsonAsker1.getConversationHistory());
+const data  = ref({})
 const userInput = ref("");
-
 
 const submit = async () => {
   const newMessage = userInput.value;
   if (newMessage) {
     jsonAsker1.addUserMsgToConversation(newMessage);
-    chatConversation.value = jsonAsker1.getConversationHistory()
-    await jsonAsker1.nextQuestion(userInput.value,{pushBefore: true});
+    chatConversation.value = jsonAsker1.getConversationHistory();
+    await jsonAsker1.nextQuestion(newMessage, { pushBefore: true });
+    console.log("data is now" , jsonAsker1.getJson())
+    data.value = jsonAsker1.getJson()
     userInput.value = "";
-    console.log("setting chatConversation");
-    chatConversation.value = jsonAsker1.getConversationHistory()
+    chatConversation.value = jsonAsker1.getConversationHistory();
   }
 };
+
+const jsonFields = ["email", "name","age","occupation","motivation","sex", "motivationForUsingTheApp","langugage" ];
 </script>
 
 <template>
@@ -94,6 +83,7 @@ const submit = async () => {
         </li>
       </ul>
     </div>
+      <JsonViewer :fields="jsonFields" :data="data"/>
     <div
       class="flex flex-col items-center mt-5 mx-auto w-6/12"
       @keyup.enter="submit"
@@ -107,7 +97,7 @@ const submit = async () => {
           class="input input-bordered w-full max-w-xs"
           v-model="userInput"
         />
-        <button class="btn" @click="submit">Submit</button>
+       <button class="btn" @click="submit">Submit</button>
       </div>
       <div class="w-full">
         <div
@@ -117,7 +107,6 @@ const submit = async () => {
             statement.position === 'start' ? 'chat-start' : 'chat-end'
           }`"
         >
-        {{ chatConversation}}
           <div
             :class="`chat-bubble ${
               statement.position === 'start' ? 'bg-amber-800' : 'chat-end'

@@ -1,14 +1,25 @@
 import { Logger } from "./Logger";
 import { ChatOpenAI, OpenAI } from "@langchain/openai";
-import { getEmptyKeys } from "./special";
-import { summarizerPrompt, correctorPrompt } from "./prompts";
+import { getEmptyKeys, combineObjects } from "./special";
+import { summarizerPrompt, summarizerPromptV2, correctorPrompt } from "./prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { LLMChain } from "langchain/chains";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { z } from "zod";
 
+const zodSchema = `
+z.object({
+    email: z.string().describe("Email of the user").default(""),
+    name: z.string().describe("Name of the user").default(""),
+    age: z.number().describe("Age of the user").default(-1),
+    motivationForUsingTheApp: z.string().describe("Motivation of the user").default(""),
+    occupation: z.string().describe("Occupation of the user").default(""),
+    sex: z.string().describe("Sex of the user").default(""),
+    language: z.string().describe("Language of the user").default(""),
+})
+`
 
 
 
@@ -36,23 +47,7 @@ const createEmbeddings = () => {
 
 }
 
-function combineObjects(obj1, obj2) {
-    const combinedObj = {};
 
-    for (const key in obj1) {
-        if (obj1.hasOwnProperty(key)) {
-            combinedObj[key] = (obj1[key] === '' || obj1[key] === -1 || obj1[key] === null || obj1[key] === undefined) ? obj2[key] : obj1[key];
-        }
-    }
-
-    for (const key in obj2) {
-        if (obj2.hasOwnProperty(key) && !obj1.hasOwnProperty(key)) {
-            combinedObj[key] = (obj2[key] === '' || obj2[key] === -1 || obj2[key] === null || obj2[key] === undefined) ? obj1[key] : obj2[key];
-        }
-    }
-
-    return combinedObj;
-}
 
 
 class JsonAsker {
@@ -115,10 +110,11 @@ class JsonAsker {
         const llmModel = createOpenAI()
         this.logger = new Logger({ context: "JsonAsker", enabled: true })
         this.outputParser = outputParser
-        this.summarizerChain = summarizerPrompt.pipe(llmModel).pipe(outputParser)
+        this.summarizerChain = summarizerPromptV2.pipe(llmModel).pipe(outputParser)
         this.corretionChain = correctorPrompt.pipe(chatModel).pipe(new StringOutputParser())
         this.json = {}
         this.nextQuestions = []
+        this.keyQuestions = []
         this.chatConversation = [new AIMessage(firstQuestion)]
         this.done = false
         this.firstQuestionDone = false
@@ -130,8 +126,10 @@ class JsonAsker {
 
 
     async updateJson(data) {
+        this.logger.log("Update json", { data, json: this.json })
         this.json = combineObjects(this.json, data)
     }
+
 
     formatMessage(message) {
         if (message instanceof HumanMessage) {
@@ -144,13 +142,11 @@ class JsonAsker {
     }
 
     getConversationHistory() {
-        const r =   this.chatConversation.map(element => this.formatMessage(element))
-        console.log({ r, cc: this.chatConversation })
-        return r
+        return this.chatConversation.map(element => this.formatMessage(element))
     }
 
     async nextQuestion(userInput, { pushBefore }) {
-        pushBefore ? this.addUserMsgToConversation(userInput) : null
+        pushBefore ? null : this.addUserMsgToConversation(userInput)
         this.logger.log("User input", { userInput, chatConversation: this.chatConversation });
 
         if (this.nextQuestions.length === 0 && !this.firstQuestionDone) {
@@ -158,10 +154,16 @@ class JsonAsker {
             await this.firstQuestion(userInput);
         } else {
             try {
-                const result = await this.summarizerChain.invoke({ format_instructions: this.outputParser, userInput: userInput });
+                const result = await this.summarizerChain.invoke({ format_instructions: this.outputParser, userInput: userInput, json_zod_schema: zodSchema });
                 this.logger.log("Result from summarizer", { result });
-                this.updateJson(result);
+                this.updateJson(result)
                 this.currentQuestion = this.nextQuestions.pop();
+                if (this.currentQuestion === undefined) {
+                    this.addAIMsgToConversation("No more questions to ask")
+                    this.done = true
+                    return
+                }
+                console.log("currentQuestion", this.currentQuestion)
                 this.addAIMsgToConversation(this.currentQuestion)
             } catch (error) {
                 this.recoverFromError(error)
@@ -171,16 +173,17 @@ class JsonAsker {
     }
 
     async addAIMsgToConversation(aiInput) {
-        console.log("Adding AI message", aiInput)
-        this.conversationChain.push(AIMessage(aiInput))
+        this.logger.log("AI input to history", { aiInput })
+        this.chatConversation.push(new AIMessage(aiInput))
     }
 
     async addUserMsgToConversation(userInput) {
-        this.conversationChain.push(HumanMessage(userInput))
+        this.logger.log("User input to history", { userInput })
+        this.chatConversation.push(new HumanMessage(userInput))
     }
 
     async recoverFromError(error) {
-        this.logger.error("Error", { error })
+        this.logger.error("Error", { error, state: this.json })
         if (this.json == {}) {
             this.nextQuestions = [] // Start again with first question if no data has been collected
 
@@ -190,45 +193,60 @@ class JsonAsker {
             this.currentQuestion = this.nextQuestions.pop()
             this.addAIMsgToConversation(this.currentQuestion)
         }
-
     }
 
     async firstQuestion(userInput) {
         try {
-            const response = await this.summarizerChain.invoke({ format_instructions: this.outputParser, userInput: userInput })
+            const response = await this.summarizerChain.invoke({ format_instructions: this.outputParser.getFormatInstructions(), userInput: userInput, json_zod_schema: zodSchema })
+            this.json = response
         } catch (error) {
             this.recoverFromError(error)
             return
         }
-        this.updateJson(response)
         await this.createQuestionsFromJson()
-        this.logger.log("Poping first question")
         this.currentQuestion = this.nextQuestions.pop()
-        console.log("Current question", this.currentQuestion)
         this.addAIMsgToConversation(this.currentQuestion)
         this.firstQuestionDone = true
         this.logger.log("First question done", { chatConversation: this.chatConversation })
     }
+
+    getJson() {
+        return this.json
+    }
+
+    findKeyFromQuestions = (question) => {
+        const keyQuestion = this.keyQuestions.find(element => element.question === question)
+        return keyQuestion.key
+    }
+
+
     async createQuestionsFromJson() {
-        const emptyKeys = getEmptyKeys(this.json)
+        const emptyKeys = getEmptyKeys(this.json);
         if (emptyKeys.length === 0) {
-            this.logger.log("No more questions to ask")
-            this.done = true
-            return
+            this.logger.log("No more questions to ask");
+            this.addAIMsgToConversation("No more questions to ask")
+            this.done = true;
+            return;
         }
 
-        emptyKeys.forEach(async key => {
+        const promises = emptyKeys.map(async key => {
             try {
-                const question = await this.corretionChain.invoke({ information: key })
-                this.nextQuestions.push(question.toString())
-                this.logger.log("Question created", { key, question })
+                const question = await this.corretionChain.invoke({ information: key });
+                this.nextQuestions.push(question.toString());
+                this.keyQuestions.push({ key, question });
+                this.logger.log("Question created", { key, question });
+                return question;
             } catch (error) {
-                this.recoverFromError(error)
-                return
+                this.recoverFromError(error);
+                return null;
             }
-        })
-        this.logger.log("Questions created", { nextQuestions: this.nextQuestions })
+        });
+
+        console.log("promises", promises);
+        await Promise.all(promises);
+        this.logger.log("Questions created", { nextQuestions: this.nextQuestions });
     }
+
 }
 
 

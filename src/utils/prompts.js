@@ -1,6 +1,6 @@
 import { StructuredOutputParser } from "langchain/output_parsers"
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { late, z } from "zod"
+import { z } from "zod"
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 
@@ -21,11 +21,17 @@ const personalInfoOutputParser = StructuredOutputParser.fromZodSchema(
 /* ------ Prompt Templates ------ */
 
 const summarizerPrompt = ChatPromptTemplate.fromTemplate(`
-  Aufgabe: Fasse die Informationen des Users als JSON-Datei zusammen
+  Aufgabe: Fasse die Informationen des UsersInput als JSON-Datei zusammen
   Falls die Information aus der UserInput nicht vorhanden ist, oder nicht sinvoll ist, schreibe bitte nichts
   Formatting Instructions : {format_instructions}
   UserInput: {userInput}
-  Previous conversation: {chat_history}
+`);
+
+const summarizerPromptV2 = ChatPromptTemplate.fromTemplate(`
+  Aufgabe: Fasse die Informationen des UsersInput als JSON-Datei zusammen
+  Json Zod Schema: {json_zod_schema}
+  Formatting Instructions : {format_instructions}
+  UserInput: {userInput}
 `);
 
 
@@ -56,5 +62,6 @@ const correctorPrompt = ChatPromptTemplate.fromTemplate(`
 export {
     personalInfoOutputParser,
     summarizerPrompt,
+    summarizerPromptV2,
     correctorPrompt
 }

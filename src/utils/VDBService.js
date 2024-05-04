@@ -1,15 +1,17 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { createRetrieverTool } from "langchain/tools/retriever";
 import { PineconeStore } from "@langchain/pinecone";
 import { Logger } from "../utils/Logger.js"
 
+const loggingActive = true
 
 
 
 class DocStore {
     static async create(namespace) {
-        const logger = new Logger({ context: "DocStore", instance: namespace, enabled: true });
+        const logger = new Logger({ context: "DocStore", instance: namespace, enabled: loggingActive});
         const pinecone = new Pinecone({
             apiKey: import.meta.env.VITE_PINECONE_API_KEY,
         });
@@ -78,6 +80,20 @@ class DocStore {
             return null
         }
     }
+
+    asRetriever() {
+        return this.vectorStore.asRetriever();
+    }
+
+    asTool({ name, description }) {
+        const retrieverTool = createRetrieverTool(this.asRetriever(), {
+            name,
+            description,
+        });
+        this.logger.log("Retriever tool created", { name, description, retrieverTool });
+        return retrieverTool;
+    }
+
 }
 
 export default DocStore;
