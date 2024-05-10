@@ -6,42 +6,61 @@ import axios from 'axios'
 
 const logger = new Logger({ context: 'userDataStore', enabled: true })
 
-const apiURL = 'https://api.example.com'
+const apiURL = 'http://localhost:3000'
 
-export const useDataStore = defineStore('counter', () => {
-    const userPreferences = ref({})
-    const userGoals = ref([])
-    const userPersonalData = ref({})
-    function loadPreferences () {
-      axios.get(`${apiURL}/preferences`)
-        .then(response => logger.log(response))
-        .catch(error => logger.error(error))
-    }
-    function setPreferences (newPreferences) {
-      axios.post(`${apiURL}/preferences`, newPreferences)
-        .then(response => logger.log(response))
-        .catch(error => logger.error(error))
-    }
-    function loadGoals () {
-      axios.get(`${apiURL}/goals`)
-        .then(response => logger.log(response))
-        .catch(error => logger.error(error))
-    }
-    function setGoal (goal) {
-      axios.post(`${apiURL}/goals`, goal)
-        .then(response => logger.log(response))
-        .catch(error => logger.error(error))
-    }
-    function loadPersonalData () {
-      axios.get(`${apiURL}/personal_data`)
-        .then(response => logger.log(response))
-        .catch(error => logger.error(error))
-    }
-    function setPersonalData (personalData) {
-      axios.post(`${apiURL}/personal_data`, personalData)
-        .then(response => logger.log(response))
-        .catch(error => logger.error(error))
-    }
-  
-    return {}
-  })
+export const useUserDataStore = defineStore('userDataStore', () => {
+  const userPreferences = ref({})
+  const userGoals = ref([])
+  const userPersonalData = ref({})
+
+
+  async function loadAll({ email }) {
+    await loadPreferences({ email })
+    await loadGoals({ email })
+    await loadPersonalData({ email })
+  }
+
+  async function loadPreferences({ email }) {
+    axios.get(`${apiURL}/preferences`, { params: { email } })
+      .then(response => {
+        logger.log(response)
+        userPreferences.value = response.data
+      })
+      .catch(error => logger.error(error))
+  }
+
+  async function setPreferences({ email, summary, testTypes }) {
+    axios.post(`${apiURL}/preferences`, { email, summary, testTypes })
+      .then(response => logger.log(response))
+      .catch(error => logger.error(error))
+  }
+
+  async function loadGoals({ email }) {
+    axios.get(`${apiURL}/goals`, { params: { email } })
+      .then(response => {
+        logger.log(response)
+        userGoals.value = response.data
+      })
+      .catch(error => logger.error(error))
+  }
+  async function setGoal({ email, topic, focus, subgoals, done }) {
+    axios.post(`${apiURL}/goals`, { email, topic, focus, subgoals, done })
+      .then(response => logger.log(response))
+      .catch(error => logger.error(error))
+  }
+  async function loadPersonalData({ email }) {
+    axios.get(`${apiURL}/users`, { params: { email } })
+      .then(response => {
+        logger.log(response)
+        userPersonalData.value = response.data
+      })
+      .catch(error => logger.error(error))
+  }
+  async function setPersonalData({ email, name, age, motivation, occupation, sex, language }) {
+    axios.post(`${apiURL}/users`, { email, name, age, motivation, occupation, sex, language })
+      .then(response => logger.log(response))
+      .catch(error => logger.error(error))
+  }
+
+  return { userPreferences, userGoals, userPersonalData, loadPreferences, setPreferences, loadGoals, setGoal, loadPersonalData, setPersonalData, loadAll }
+})

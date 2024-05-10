@@ -1,4 +1,5 @@
 <script setup>
+/*
 import { ref } from "vue";
 import BackendConnectionBadge from "@/components/BackendConnectionBadge.vue";
 import LearningCard from "@/components/LearningCard.vue";
@@ -21,14 +22,26 @@ DocStore.create("user123")
 })
 const addToIndex = () => sto.addDocument(text.value);
 const search = () => sto.queryDocuments({query: text.value});
+*/
+
+import { ref } from "vue";
+import { useUserDataStore } from "@/store/userDataStore.js";
+import { storeToRefs } from "pinia";
+
+const userDataStore = useUserDataStore();
+
+const { userPreferences, userGoals, userPersonalData } =
+  storeToRefs(userDataStore);
 </script>
 
 
 <template>
   <div>
+    <!--
     <input type="text" v-model="text" />
     <button @click="addToIndex()">Add</button>
     <button @click="search()">Suchen</button>
     {{ output }}
+    -->
   </div>
 </template>

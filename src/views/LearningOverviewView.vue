@@ -1,12 +1,18 @@
 <script setup>
 import LearningCard from "@/components/LearningCard.vue";
 import { ref } from "vue";
+import { useUserDataStore } from "@/store/userDataStore.js";
+import { storeToRefs } from "pinia";
 
+const userDataStore = useUserDataStore();
+
+const { userGoals } = storeToRefs(userDataStore);
 
 
 
 
 const learningGoals = ref([
+  ...userGoals.value.map(g => { return {title: g.topic, content: ""}}),
   {
     title: "Systemprogrammierung",
     content:

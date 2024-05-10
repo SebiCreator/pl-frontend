@@ -12,7 +12,7 @@ dotenv.config();
 export default defineConfig({
   plugins: [
     vue(),
-    //VueDevTools(),
+    VueDevTools(),
   ],
   define: {
     global: {},

@@ -9,6 +9,11 @@ const router = createRouter({
       component: () => import('../views/LandingView.vue')
     },
     {
+      path: "/newGoal",
+      name: "NewGoal",
+      component: () => import('../views/NewGoalView.vue')
+    },
+    {
       path: '/about',
       name: 'About',
       component: () => import('../views/AboutView.vue')
@@ -44,10 +49,16 @@ const router = createRouter({
       component : () => import('../views/WelcomeQuestionsView.vue')
     },
     {
+      path : "/learning",
+      name : "Learning",
+      component : () => import('../views/LearningView.vue')
+    },
+    {
       path: "/:catchAll(.*)",
       name : "Error",
       component: () => import('../views/ErrorView.vue')
     },
+
 
   ]
 })

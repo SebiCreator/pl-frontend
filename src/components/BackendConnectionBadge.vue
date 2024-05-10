@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { state, socket } from "../socket";
+//import { state, socket } from "../socket";
 import axios from "axios";
 const apiIsAlive = ref(false);
 const wsIsAlive = ref(false);
@@ -30,7 +30,7 @@ const sendMessage = () => {
 }
 
 setTimeout(checkBackendConnection, 1000);
-setTimeout(checkWSConnection, 1000);
+//setTimeout(checkWSConnection, 1000);
 </script>
 
 

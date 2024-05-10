@@ -62,6 +62,6 @@ const mainFunc = async () => {
     await agent.invoke({ input: "generate a random number between 10 and 200" })
 }
 
-export { mainFunc }
+export { mainFunc, Agent }
 
 
