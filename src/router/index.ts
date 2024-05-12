@@ -49,7 +49,7 @@ const router = createRouter({
       component : () => import('../views/WelcomeQuestionsView.vue')
     },
     {
-      path : "/learning",
+      path : "/learning/:topic",
       name : "Learning",
       component : () => import('../views/LearningView.vue')
     },

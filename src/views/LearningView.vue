@@ -5,8 +5,11 @@ import { helloUserChain } from "@/utils/chains.js";
 import { Agent } from "@/utils/agents.js";
 import axios from "axios";
 import { defineProps } from "vue";
+import { useRoute } from "vue-router";
+const route = useRoute();
 
-const props = defineProps(["subgoal"]);
+const subgoal = ref(route.params.topic);
+
 
 const chatConversation = ref([]);
 
@@ -42,7 +45,7 @@ const sendMessage = () => {
   console.log("sending message");
 };
 
-const submitAction = (msg) => {
+const submitAction = (msg) => { 
   console.log("submitting action", msg);
 };
 
@@ -75,6 +78,7 @@ onBeforeMount(async () => {
 </script>
 <template>
   <div class="flex justify-center h-screen">
+  {{ subgoal || "No subgoal" }}
     <div
       class="w-1/2 border flex items-center justify-center overflow-hidden rounded-lg"
     >

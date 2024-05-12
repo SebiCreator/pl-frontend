@@ -4,6 +4,7 @@ import { ref } from "vue";
 import { useSubGoalSplitter } from "../utils/chains.js";
 import { useUserDataStore } from "@/store/userDataStore.js";
 import { storeToRefs } from "pinia";
+import GoalOverview from "../components/GoalOverview.vue";
 
 const userDataStore = useUserDataStore();
 
@@ -28,16 +29,18 @@ async function submitForm() {
   showInput.value = false;
 }
 
+const goal = ref(null)
+
 async function saveGoal() {
-  const goal = {
+  goal.value = {
     email: userPersonalData.email,
     topic: topic.value,
     focus: focus.value,
     dont: false,
     subgoals: steps.value,
   };
-  userGoals.value.push(goal);
-  await userDataStore.setGoal(goal);
+  userGoals.value.push(goal.value);
+  await userDataStore.setGoal(goal.value);
 }
 </script>
 
@@ -71,14 +74,7 @@ async function saveGoal() {
         Submit
       </button>
     </div>
-    <div v-else class="max-w-md mx-auto mt-10 space-y-4">
-      <ul class="steps steps-vertical">
-        <li v-for="e in steps" :key="e.name" class="step">{{ e.name }}</li>
-      </ul>
-      <div class="flex flex-row justify-between items-center">
-        <button class="btn">Gut so</button>
-        <button class="btn">Ich will noch etwas ändern</button>
-      </div>
-    </div>
+    <GoalOverview v-else :subgoals="steps" :goal="goal" />
+    {{ goal || "dasfas" }}
   </div>
 </template>

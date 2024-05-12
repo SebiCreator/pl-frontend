@@ -3,6 +3,9 @@ import LearningCard from "@/components/LearningCard.vue";
 import { ref } from "vue";
 import { useUserDataStore } from "@/store/userDataStore.js";
 import { storeToRefs } from "pinia";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const userDataStore = useUserDataStore();
 
@@ -12,7 +15,7 @@ const { userGoals } = storeToRefs(userDataStore);
 
 
 const learningGoals = ref([
-  ...userGoals.value.map(g => { return {title: g.topic, content: ""}}),
+  ...userGoals.value.map(g => { return {title: g.topic, content: g.description}}),
   {
     title: "Systemprogrammierung",
     content:
@@ -39,15 +42,21 @@ const learningGoals = ref([
       "Lerne Java von Grund auf mit diesem praxisorientierten Kurs. Meistere die Sprache durch praktische Übungen und Anwendungen für ein fundiertes Verständnis.",
   },
 ]);
+
+const toNewGoal = () => router.push("/newGoal")
+
+const toLearn = (title) => {
+  router.push({name: "Learning", params: {topic : title}});
+};
 </script>
 
 
 <template>
   <div>
-    <button class="btn mb-5 ml-5">Neues Lernziel</button>
+    <button class="btn mb-5 ml-5" @click="toNewGoal">Neues Lernziel</button>
     <div class="flex flex-wrap justify-left">
       <div v-for="goal in learningGoals" :key="goal.title" class="m-4">
-        <LearningCard :title="goal.title" :content="goal.content" />
+        <LearningCard :title="goal.title" :content="goal.content" @click="toLearn(goal.title)" />
       </div>
     </div>
   </div>
