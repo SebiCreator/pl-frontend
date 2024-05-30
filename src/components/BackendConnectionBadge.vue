@@ -4,6 +4,7 @@ import { ref } from "vue";
 import axios from "axios";
 const apiIsAlive = ref(false);
 const wsIsAlive = ref(false);
+import { state } from "../socket.js";
 
 const backendURL = "http://localhost:3000/health";
 
@@ -30,7 +31,7 @@ const sendMessage = () => {
 }
 
 setTimeout(checkBackendConnection, 1000);
-//setTimeout(checkWSConnection, 1000);
+setTimeout(checkWSConnection, 1000);
 </script>
 
 

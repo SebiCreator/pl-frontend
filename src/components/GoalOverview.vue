@@ -1,12 +1,35 @@
 <script setup>
 import { ref } from "vue";
-const { subgoals, goal } = defineProps(["subgoals", "goal"]);
+import { useUserDataStore } from "@/store/userDataStore.js";
+import { useCorrectorSubGoalSplitter } from "../utils/chains.js";
+const dataStore = useUserDataStore();
+const props  = defineProps(["subgoals", "goal"]);
+const emits = defineEmits(["done"]);
 
-const done = () => {};
-const change = () => {};
+const goal = ref(props.goal);
+const subgoals = ref(props.subgoals);
 
-console.log(subgoals);
-console.log(goal);
+const changes = ref("");
+
+const done = () => {
+  emits("done", subgoals.value);
+};
+
+console.log({ goal, subgoals})
+
+const changeSubgoals = async () => {
+  const result = await useCorrectorSubGoalSplitter({
+    goal: goal.value,
+    subgoals: JSON.stringify(subgoals.value),
+    changes: changes.value,
+    language: "de",
+  });
+  subgoals.value = result.subgoals;
+  goal.value = result.goal;
+  console.log({ goal, subgoals })
+  console.log(result);
+};
+
 </script>
 <template>
   <div class="max-w-md mx-auto mt-10 space-y-4">
@@ -16,7 +39,8 @@ console.log(goal);
     </ul>
     <div class="flex flex-row justify-between items-center">
       <button class="btn" @click="done">Gut so</button>
-      <button class="btn" @click="change">Ich will noch etwas ändern</button>
+      <input type="text" placeholder="Änderungen.." v-model="changes" />
+      <button @click="changeSubgoals">Ändern</button>
     </div>
   </div>
 </template>

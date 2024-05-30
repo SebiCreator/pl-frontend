@@ -34,11 +34,6 @@ const router = createRouter({
       component: () => import('../views/RegisterView.vue')
     },
     {
-      path: "/stats",
-      name: "Stats",
-      component: () => import('../views/StatsView.vue')
-    },
-    {
       path: "/overview",
       name: "Overview",
       component: () => import('../views/LearningOverviewView.vue')
@@ -52,6 +47,11 @@ const router = createRouter({
       path : "/learning/:topic",
       name : "Learning",
       component : () => import('../views/LearningView.vue')
+    },
+    {
+      path : "/goal/:topic",
+      name : "Goal",
+      component : () => import('../views/GoalView.vue')
     },
     {
       path: "/:catchAll(.*)",

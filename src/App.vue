@@ -20,31 +20,31 @@ const examplePersonalData = {
 };
 const exampleGoal = {
     "email": "test@test.de",
-    "topic": "Improve Software Development Skills",
-    "focus": ["Programming", "Design Patterns", "Testing"],
+    "topic": "Java Grundlagen verstehen",
+    "focus": ["Programmierung", "Entwurfsmuster", "Testen"],
     "subgoals": [
         {
-            "topic": "Learn JavaScript",
-            "testSummary": "Completed all JavaScript exercises and projects.",
-            "description": "Learned JavaScript basics and created a simple web application.",
+            "topic": "Java lernen",
+            "testSummary": "Alle Java-Übungen und Projekte abgeschlossen.",
+            "description": "Grundlagen von Java gelernt und ein einfaches Programm erstellt.",
             "done": true,
             "lastChanged": "2024-05-10T00:00:00.000Z",
             "level": 2
         },
         {
-            "topic": "Study Design Patterns",
-            "testSummary": "Understood Factory and Singleton patterns.",
-            "description": "Studied Factory and Singleton patterns and implemented them in a project.",
+            "topic": "Entwurfsmuster studieren",
+            "testSummary": "Factory- und Singleton-Muster verstanden.",
+            "description": "Factory- und Singleton-Muster studiert und in einem Projekt implementiert.",
             "done": false,
             "lastChanged": "2024-05-10T00:00:00.000Z",
             "level": 3
         },
         {
-            "topic": "Implement Unit Tests",
-            "testSummary": "Created unit tests for all new modules.",
+            "topic": "Unit-Tests implementieren",
+            "testSummary": "Unit-Tests für alle neuen Module erstellt.",
+            "description": "Unit-Tests für alle neuen Module implementiert.",
             "done": false,
             "lastChanged": "2024-05-10T00:00:00.000Z",
-            "description": "Implemented unit tests for all new modules.",
             "level": 1
         }
     ],
@@ -53,9 +53,11 @@ const exampleGoal = {
 }
 
 
+
 const dataStore = useUserDataStore();
 
 const onLoad = async () => {
+  await dataStore.setGoal(exampleGoal);
   await dataStore.loadAll({ email: "test@test.de" });
 };
 

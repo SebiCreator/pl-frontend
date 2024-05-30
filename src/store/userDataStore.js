@@ -43,8 +43,9 @@ export const useUserDataStore = defineStore('userDataStore', () => {
       })
       .catch(error => logger.error(error))
   }
-  async function setGoal({ email, topic, focus, subgoals, done }) {
-    axios.post(`${apiURL}/goals`, { email, topic, focus, subgoals, done })
+  async function setGoal({ email, topic , description, focus="", subgoals }) {
+    userGoals.value.push({ email, topic, description, focus, subgoals })
+    axios.post(`${apiURL}/goals`, { email, topic, focus, description,  subgoals })
       .then(response => logger.log(response))
       .catch(error => logger.error(error))
   }

@@ -51,8 +51,7 @@ const cmOptions = {
 
 
 <template>
-  <div class="flex flex-row border">
-    <div class="w-1/2 overflow-hidden rounded-lg">
+  <div class="flex flex-row border rounded-lg">
       <CodeEditor
         v-model:value="code"
         :options="cmOptions"
@@ -60,8 +59,6 @@ const cmOptions = {
         :height="600"
         @change="change"
       />
-    </div>
-    <button class="btn" @click="send" >Send</button>
-    <div class="w-1/2"></div>
+
   </div>
 </template>

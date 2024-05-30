@@ -1,7 +1,7 @@
 
 <script setup>
 import { ref } from "vue";
-import { useSubGoalSplitter } from "../utils/chains.js";
+import { useSubGoalSplitter ,useGoalSummaryChain  } from "../utils/chains.js";
 import { useUserDataStore } from "@/store/userDataStore.js";
 import { storeToRefs } from "pinia";
 import GoalOverview from "../components/GoalOverview.vue";
@@ -13,68 +13,95 @@ const { userPreferences, userGoals, userPersonalData } =
 
 const language = ref(userPersonalData.language || "de");
 
+const isLoading = ref(false);
+
 const topic = ref("");
 const focus = ref("");
 const showInput = ref(true);
 const steps = ref([]);
 
 async function submitForm() {
+  isLoading.value = true;
   const result = await useSubGoalSplitter({
     goal: topic.value,
     description: focus.value,
     language: language.value,
   });
-  const { subgoals } = result;
+  const { subgoals, goal } = result;
+  topic.value = goal;
   steps.value = subgoals;
   showInput.value = false;
+  isLoading.value = false;
 }
 
-const goal = ref(null)
+const goal = ref(null);
 
-async function saveGoal() {
-  goal.value = {
-    email: userPersonalData.email,
-    topic: topic.value,
+async function saveGoal(subgoals) {
+  console.log("Save Goal");
+  console.log(subgoals);
+  console.log(userPersonalData);
+  const goalDescription = await  useGoalSummaryChain({
+    goal: topic.value,
+    subgoals: subgoals.map(s => s.name),
     focus: focus.value,
-    dont: false,
-    subgoals: steps.value,
+  });
+  console.log({ goalDescription });
+  const _subgoals = subgoals.map((s) => ({
+      topic: s.name,
+      description: s.description,
+      count: 0, // TODO
+      maxCount: 10, // TODO
+      difficulty: "easy", // TODO
+    }))
+  console.log({ _subgoals });
+  const _goal = {
+    topic: topic.value,
+    description: goalDescription, // TODO!
+    focus: focus.value || "",
+    email: userPersonalData.value.email,
+    subgoals: _subgoals,
   };
-  userGoals.value.push(goal.value);
-  await userDataStore.setGoal(goal.value);
+  console.log({ _goal });
+  userDataStore.setGoal(_goal);
 }
 </script>
 
 <template>
   <div>
-    <div v-if="showInput" class="max-w-md mx-auto mt-10 space-y-4">
-      <div>
-        <label for="input" class="block text-sm font-medium text-gray-700"
-          >Thema</label
+    <div v-if="!isLoading">
+      <div v-if="showInput" class="max-w-md mx-auto mt-10 space-y-4">
+        <div>
+          <label for="input" class="block text-sm font-medium text-gray-700"
+            >Thema</label
+          >
+          <input
+            id="input"
+            v-model="topic"
+            type="text"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+        <div>
+          <label for="focus" class="block text-sm font-medium text-gray-700"
+            >Beschreibe so genau wie möglich was du genau lernen willst</label
+          >
+          <textarea
+            class="w-full textarea textarea-bordered"
+            v-model="focus"
+          ></textarea>
+        </div>
+        <button
+          @click="submitForm"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-        <input
-          id="input"
-          v-model="topic"
-          type="text"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
+          Submit
+        </button>
       </div>
-      <div>
-        <label for="focus" class="block text-sm font-medium text-gray-700"
-          >Beschreibe so genau wie möglich was du genau lernen willst</label
-        >
-        <textarea
-          class="w-full textarea textarea-bordered"
-          v-model="focus"
-        ></textarea>
-      </div>
-      <button
-        @click="submitForm"
-        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        Submit
-      </button>
+      <GoalOverview v-else :subgoals="steps" :goal="goal" @done="saveGoal" />
     </div>
-    <GoalOverview v-else :subgoals="steps" :goal="goal" />
-    {{ goal || "dasfas" }}
+    <div v-else class="flex flex-col items-center justify-center">
+      <span class="loading loading-infinity loading-lg"></span>
+      <h1 class="text-2xl">Loading</h1>
+    </div>
   </div>
 </template>

@@ -19,6 +19,7 @@
     "@langchain/openai": "^0.0.28",
     "@langchain/pinecone": "^0.0.4",
     "@pinecone-database/pinecone": "^2.2.0",
+    "@wdns/vue-code-block": "^2.3.2",
     "axios": "^1.6.8",
     "codemirror": "^5.65.16",
     "codemirror-editor-vue3": "^2.5.8",

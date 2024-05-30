@@ -8,7 +8,7 @@ import { Logger } from "./Logger.js";
 
 
 class Agent {
-    constructor({ llm, prompt, tools, verbose = false, reAct = false }) {
+    constructor({ llm=createChatOpenAI(), prompt, tools, verbose = false, reAct = false }) {
         this.logger = new Logger({ context: "Agent", enabled: true })
         this.llm = llm
         this.prompt = prompt

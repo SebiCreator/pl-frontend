@@ -1,5 +1,6 @@
-import { DynamicTool, DynamicStructuredTool } from "@/langchain/core/tools";
+import { DynamicTool, DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
+
 
 
 const exampleDyanmicTool = new DynamicTool({

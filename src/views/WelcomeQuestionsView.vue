@@ -12,6 +12,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { StructuredOutputParser } from "langchain/output_parsers";
 import { getEmptyKeys } from "../utils/special.js";
 import JsonViewer from "../components/JsonViewer.vue";
+import UserDataInputs from "../components/UserDataInputs.vue";
 
 
 const steps = ref([
@@ -64,11 +65,23 @@ const submit = async () => {
   }
 };
 
+const useLLM = ref(true);
+
+const updateUseLLM = (value) => {
+  useLLM.value = value;
+};
+
 const jsonFields = ["email", "name","age","occupation","motivation","sex", "motivationForUsingTheApp","langugage" ];
 </script>
 
 <template>
   <div>
+   <label for="useLLM" class="font-medium">Use LLM:</label>
+    <input type="radio" id="useLLM" name="radio-1" class="radio" v-model="useLLM" :value="true" />
+    <label for="useLLM">Yes</label>
+    <input type="radio" id="notUseLLM" name="radio-1" class="radio" v-model="useLLM" :value="false" />
+    <label for="notUseLLM">No</label>
+  <div v-if="useLLM">
     <div class="flex flex-row justify-center my-20">
       <ul class="steps steps-vertical lg:steps-horizontal">
         <li
@@ -117,5 +130,9 @@ const jsonFields = ["email", "name","age","occupation","motivation","sex", "moti
         </div>
       </div>
     </div>
+    </div>
+  <div v-else>
+  <UserDataInputs />
+  </div>
   </div>
 </template>
