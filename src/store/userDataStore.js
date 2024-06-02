@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { Logger } from '../utils/Logger'
 import axios from 'axios'
 
-const logger = new Logger({ context: 'userDataStore', enabled: true })
+const logger = new Logger({ context: 'userDataStore', enabled: false})
 
 const apiURL = 'http://localhost:3000'
 

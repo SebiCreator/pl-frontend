@@ -57,7 +57,6 @@ const exampleGoal = {
 const dataStore = useUserDataStore();
 
 const onLoad = async () => {
-  await dataStore.setGoal(exampleGoal);
   await dataStore.loadAll({ email: "test@test.de" });
 };
 

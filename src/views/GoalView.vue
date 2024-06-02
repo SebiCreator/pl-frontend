@@ -12,9 +12,10 @@ const goalName = route.params.topic;
 const fullGoal = store.userGoals.find((goal) => goal.topic === goalName);
 const goalTopic = fullGoal.topic;
 const subGoals = fullGoal.subgoals;
-const learn = (topic) => {
-  console.log("Learning", { topic,goalTopic });
-  router.push({ name: "Learning", params: { topic: topic } });
+const learn = (subgoalTopic) => {
+  console.log("----")
+  console.log({ s:subgoalTopic, g: goalTopic })
+  router.push({ name: "Learning", params: { subgoalTopic, goalTopic } });
 };
 console.log(fullGoal);
 </script>

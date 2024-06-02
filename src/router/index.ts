@@ -44,7 +44,7 @@ const router = createRouter({
       component : () => import('../views/WelcomeQuestionsView.vue')
     },
     {
-      path : "/learning/:topic",
+      path : "/learning/:goalTopic/:subgoalTopic",
       name : "Learning",
       component : () => import('../views/LearningView.vue')
     },
