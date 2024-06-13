@@ -147,7 +147,13 @@ const findErrorTool = new DynamicStructuredTool({
         topic: z.string().describe("The topic of the error").default(""),
     }),
     description: "Creates an example with an error for the user to find and correct",
-    func: async ({topic}) => useFindErrorChain({ topic }),
+    func: async ({topic}) => await useFindErrorChain({ topic }),
+    callbacks: {
+        onInvoke: (result) => {
+            console.log(result)
+        }
+
+    }
 })
 
 
@@ -173,7 +179,7 @@ const resolveFindErrorTool = new DynamicStructuredTool({
         task: z.string().describe("The task that was given to the user").default(""),
         solution: z.string().describe("The solution that the user provided").default(""),
     }),
-    func: async ({topic, task, solution}) => useResolveFindErrorChain({ topic, task, solution }),
+    func: async ({topic, task, solution}) => await useResolveFindErrorChain({ topic, task, solution }),
 })
 
 
@@ -196,8 +202,8 @@ const askQuestionTool = new DynamicStructuredTool({
     schema: z.object({
         topic: z.string().describe("The topic of the question").default(""),
     }),
-    description: "Creates a question for the user to answer",
-    func: async ({topic}) => useAskQuestionChain({ topic }),
+    description: "Erstellt eine Frage für den User zum Thema",
+    func: async ({topic}) => await useAskQuestionChain({ topic }),
 })
 
 

@@ -7,7 +7,9 @@ import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { z } from "zod";
+import { useUserDataStore } from "../store/userDataStore";
+
+const userDataStore = useUserDataStore()
 
 const zodSchema = `
 z.object({
@@ -23,9 +25,12 @@ z.object({
 
 
 
-const turbo = "gpt-3.5-turbo"
+const gpt35Turbo = "gpt-3.5-turbo"
 
-const createOpenAI = ({ model = turbo, temp = 0.2 } = { model: turbo, temp: 0.2 }) => {
+
+
+
+const createOpenAI = ({ model = gpt35Turbo , temp = 0.2 } = { model:gpt35Turbo, temp: 0.2 }) => {
     return new OpenAI({
         openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
         temperature: temp,

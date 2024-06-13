@@ -14,12 +14,14 @@ const toNewGoal = () => router.push("/newGoal");
 const toGoal = (topic) => {
   router.push({ name: "Goal", params: { topic } });
 };
+const toNewPdfGoal = () => router.push("/newPdfGoal");
 </script>
 
 
 <template>
   <div>
     <button class="btn mb-5 ml-5" @click="toNewGoal">Neues Lernziel</button>
+    <button class="btn mb-5 ml-5" @click="toNewPdfGoal">Lernziel aus Pdf</button>
     <div v-if="userGoals" class="flex flex-wrap justify-left">
       <div v-for="goal in userGoals" :key="goal.title" class="m-4">
         <LearningCard

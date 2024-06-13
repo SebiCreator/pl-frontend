@@ -6,7 +6,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'Landing',
-      component: () => import('../views/LandingView.vue')
+      redirect: '/overview'
     },
     {
       path: "/newGoal",
@@ -37,6 +37,11 @@ const router = createRouter({
       path: "/overview",
       name: "Overview",
       component: () => import('../views/LearningOverviewView.vue')
+    },
+    {
+      path: "/newPdfGoal",
+      name: "NewPdfGoal",
+      component: () => import('../views/NewPdfGoalView.vue')
     },
     {
       path: "/w-questions",

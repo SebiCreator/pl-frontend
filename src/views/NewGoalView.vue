@@ -5,6 +5,9 @@ import { useSubGoalSplitter ,useGoalSummaryChain  } from "../utils/chains.js";
 import { useUserDataStore } from "@/store/userDataStore.js";
 import { storeToRefs } from "pinia";
 import GoalOverview from "../components/GoalOverview.vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const userDataStore = useUserDataStore();
 
@@ -63,6 +66,7 @@ async function saveGoal(subgoals) {
   };
   console.log({ _goal });
   userDataStore.setGoal(_goal);
+  router.push("/overview");
 }
 </script>
 

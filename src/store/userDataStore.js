@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { Logger } from '../utils/Logger'
 import axios from 'axios'
 
@@ -12,6 +12,8 @@ export const useUserDataStore = defineStore('userDataStore', () => {
   const userPreferences = ref({})
   const userGoals = ref([])
   const userPersonalData = ref({})
+  const llmModel = ref("gpt-3.5-turbo")
+  const temperature = ref(0.3)
 
 
   async function loadAll({ email }) {
@@ -63,5 +65,5 @@ export const useUserDataStore = defineStore('userDataStore', () => {
       .catch(error => logger.error(error))
   }
 
-  return { userPreferences, userGoals, userPersonalData, loadPreferences, setPreferences, loadGoals, setGoal, loadPersonalData, setPersonalData, loadAll }
+  return { userPreferences, userGoals, userPersonalData,llmModel,temperature, loadPreferences, setPreferences, loadGoals, setGoal, loadPersonalData, setPersonalData, loadAll }
 })
