@@ -6,7 +6,7 @@ import axios from 'axios'
 
 const logger = new Logger({ context: 'userDataStore', enabled: false})
 
-const apiURL = 'http://localhost:3000'
+const apiURL = import.meta.env.VITE_BACKEND_URL
 
 export const useUserDataStore = defineStore('userDataStore', () => {
   const userPreferences = ref({})

@@ -6,7 +6,7 @@ const apiIsAlive = ref(false);
 const wsIsAlive = ref(false);
 import { state } from "../socket.js";
 
-const backendURL = "http://localhost:3000/health";
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 const checkBackendConnection = async () => {
   try {

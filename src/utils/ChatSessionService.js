@@ -3,7 +3,8 @@ import { Logger } from "./Logger";
 
 const logger = new Logger({ context: 'ChatSessionService', enabled: true })
 
-const apiURL = 'http://localhost:3000'
+
+const apiURL = import.meta.env.VITE_BACKEND_URL
 
 async function getChatSession({ id }) {
     logger.log("ChatSessionService.getChatSession", { id })

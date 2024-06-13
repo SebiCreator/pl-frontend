@@ -32,6 +32,8 @@ import {
 import { useUserDataStore } from "../store/userDataStore.js";
 import { storeToRefs } from "pinia";
 
+const backendURL = import.meta.env.VITE_BACKEND_URL;
+
 const userDataStore = useUserDataStore();
 
 const agent = ref(null);
@@ -138,7 +140,8 @@ const loadChatHistory = async () => {
 };
 
 const updateSubgoal = async () => {
-  const result = await axios.post("http://localhost:3000/subgoal", {
+  const url = `${backendURL}/subgoal`;
+  const result = await axios.post(url, {
     email: userDataStore.userPersonalData.email,
     topic: goalTopic.value,
     subgoalTopic: subgoal.value,
