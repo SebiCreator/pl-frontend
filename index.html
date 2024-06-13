@@ -10,5 +10,8 @@
     <script src="compatibility.js"></script>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      var global = global === undefined ? window : global
+    </script>
   </body>
 </html>

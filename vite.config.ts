@@ -15,7 +15,7 @@ export default defineConfig({
     VueDevTools(),
   ],
   define: {
-    global: '({})',
+     global: "globalThis",
   },
   resolve: {
     alias: {
