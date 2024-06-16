@@ -1,19 +1,15 @@
 <script setup>
 import { ref, watch } from "vue";
-// import Codemirror from "codemirror-editor-vue3";
+ import Codemirror from "codemirror-editor-vue3";
 import { socket, state } from "../socket.js";
 
-// placeholder
-// import "codemirror/addon/display/placeholder.js";
+import "codemirror/addon/display/placeholder.js";
 
-// language
-// import "codemirror/mode/javascript/javascript.js";
-// import "codemirror/mode/python/python.js";
-// import "codemirror/mode/yaml/yaml.js";
-// placeholder
-// import "codemirror/addon/display/placeholder.js";
-// theme
-// import "codemirror/theme/dracula.css";
+import "codemirror/mode/javascript/javascript.js";
+import "codemirror/mode/python/python.js";
+import "codemirror/mode/yaml/yaml.js";
+import "codemirror/addon/display/placeholder.js";
+import "codemirror/theme/dracula.css";
 
 const props = defineProps({
   code: String,
@@ -59,12 +55,12 @@ const cmOptions = {
 
 <template>
   <div class="flex flex-row border rounded-lg">
-    <!-- <CodeEditor
+     <CodeEditor
       v-model:value="code"
       :options="cmOptions"
       border
       :height="600"
       @change="change"
-    /> -->
+    /> 
   </div>
 </template>

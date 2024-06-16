@@ -9,6 +9,16 @@ const router = createRouter({
       redirect: '/overview'
     },
     {
+      path: "/codeReview/:sessionId",
+      name : "CodeReview",
+      component : () => import('../views/CodeReviewView.vue')
+    },
+    {
+      path: "/codeReview",
+      name : "CodeReview",
+      component : () => import('../views/CodeReviewView.vue')
+    },
+    {
       path: "/newGoal",
       name: "NewGoal",
       component: () => import('../views/NewGoalView.vue')

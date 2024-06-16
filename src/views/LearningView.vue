@@ -438,7 +438,7 @@ onBeforeMount(async () => {
         <div class="border h-full w-full p-4 rounded-xl">
           <Editor
             v-model:code="code"
-            :vsCodeSync="false"
+            :vsCodeSync="true"
             @change="handleEditorChange"
           />
         </div>

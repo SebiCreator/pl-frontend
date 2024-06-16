@@ -117,7 +117,7 @@ const GoalSummaryPrompt = ChatPromptTemplate.fromTemplate(`
 
 const goalSummaryChain = GoalSummaryPrompt.pipe(llm)
 
-const useGoalSummaryChain = async ({ goal, subgoals, focus  }) => { return goalSummaryChain.invoke({ goal, subgoals, focus }) }
+const useGoalSummaryChain = async ({ goal, subgoals, focus }) => { return goalSummaryChain.invoke({ goal, subgoals, focus }) }
 
 
 
@@ -125,7 +125,7 @@ const useGoalSummaryChain = async ({ goal, subgoals, focus  }) => { return goalS
 
 
 
-
+/* ---  AGENT TOOLS --- */
 
 
 
@@ -147,13 +147,13 @@ const findErrorTool = new DynamicStructuredTool({
         topic: z.string().describe("The topic of the error").default(""),
     }),
     description: "Creates an example with an error for the user to find and correct",
-    func: async ({topic}) => await useFindErrorChain({ topic }),
+    func: async ({ topic }) => await useFindErrorChain({ topic }),
     callbacks: {
         onInvoke: (result) => {
             console.log(result)
         }
 
-    }
+    }, verbose: false
 })
 
 
@@ -179,7 +179,7 @@ const resolveFindErrorTool = new DynamicStructuredTool({
         task: z.string().describe("The task that was given to the user").default(""),
         solution: z.string().describe("The solution that the user provided").default(""),
     }),
-    func: async ({topic, task, solution}) => await useResolveFindErrorChain({ topic, task, solution }),
+    func: async ({ topic, task, solution }) => await useResolveFindErrorChain({ topic, task, solution }),
 })
 
 
@@ -203,7 +203,7 @@ const askQuestionTool = new DynamicStructuredTool({
         topic: z.string().describe("The topic of the question").default(""),
     }),
     description: "Erstellt eine Frage für den User zum Thema",
-    func: async ({topic}) => await useAskQuestionChain({ topic }),
+    func: async ({ topic }) => await useAskQuestionChain({ topic }),
 })
 
 
@@ -231,7 +231,7 @@ const resolveAskQuestionTool = new DynamicStructuredTool({
         question: z.string().describe("The question that was given to the user").default(""),
         answer: z.string().describe("The answer that the user provided").default(""),
     }),
-    func: async ({topic, question, answer}) => useResolveAskQuestionChain({ topic, question, answer }),
+    func: async ({ topic, question, answer }) => useResolveAskQuestionChain({ topic, question, answer }),
 })
 
 
@@ -255,12 +255,104 @@ const codeReviewTool = new DynamicStructuredTool({
         code: z.string().describe("The code that the user provided").default(""),
     }),
     description: "Reviews the code that the user provided",
-    func: async ({code}) => useCodeReviewChain({ code }),
+    func: async ({ code }) => useCodeReviewChain({ code }),
 })
 
 
 
 const chatAgentTools = [findErrorTool, resolveFindErrorTool, askQuestionTool, resolveAskQuestionTool, codeReviewTool]
+
+
+/* END AGENT TOOLS  ---- BEGIN REVIEW CHAINS */
+
+/* Code bewerten */
+const codeReviewEvalPrompt = ChatPromptTemplate.fromTemplate(`
+    Der User hat dir folgenden Code geschickt: {code}
+    Ignoriere fehler bei der Einrückung
+    Bitte gib dem  User eine Bewertung wie du diesen Code findest.
+`)
+
+const codeReviewEvalChain = codeReviewEvalPrompt.pipe(llm).pipe(new StringOutputParser())
+const useCodeReviewEvalChain = async ({ code }) => codeReviewEvalChain.invoke({ code })
+
+/* Tipps geben */
+const codeReviewFeedbackPrompt = ChatPromptTemplate.fromTemplate(`
+    Du bist ein Tool das dem User bei Code Reviews hilft.
+    Der User hat dir folgenden Code geschickt: {code}
+    Ignoriere fehler bei der Einrückung
+    Bitte gib dem User Feedback was er verbessern kann.
+`)
+
+const codeMessageSplitOutputParser = StructuredOutputParser.fromZodSchema(
+    z.object({
+        code: z.string().describe("Den verbesserten Code des Users").default(""),
+        message: z.string().describe("Die Nachricht an den User").default(""),
+    })
+)
+
+const codeReviewFeedbackChain = codeReviewFeedbackPrompt.pipe(llm).pipe(new StringOutputParser())
+
+const useCodeReviewFeedbackChain = async ({ code }) => codeReviewFeedbackChain.invoke({ code })
+
+
+/* Code verbessern */
+const codeReviewImprovePrompt = ChatPromptTemplate.fromTemplate(`
+    Du bist ein Tool das dem User bei Code Reviews hilft.
+    Der User hat dir folgenden Code geschickt: {code}
+    Ignoriere fehler bei der Einrückung
+    Bitte verbessere den Code des Users und schreibe eine message an den User was du verbessert hast.
+    Format Instructions: {format_instructions}
+`)
+
+const codeReviewImproveChain = codeReviewImprovePrompt.pipe(llm).pipe(codeMessageSplitOutputParser)
+
+const useCodeReviewImproveChain = async ({ code }) => codeReviewImproveChain.invoke({ code, format_instructions: codeMessageSplitOutputParser.getFormatInstructions() })
+
+
+
+/* Fragen stellen */
+const codeReviewCodeQuestionPrompt = ChatPromptTemplate.fromTemplate(`
+    Du bist ein Tool das dem User bei Code Reviews hilft.
+    Der User hat dir folgenden Code geschickt: {code}
+    Ignoriere fehler bei der Einrückung
+    Stelle dem User eine Frage zu seinem Code.
+    Dies soll eine Frage sein die testet ob der User den Code wirklich verstanden hat
+    `)
+
+
+const codeReviewCodeQuestionChain = codeReviewCodeQuestionPrompt.pipe(llm).pipe(new StringOutputParser())
+const useCodeReviewCodeQuestionChain = async ({ code }) => codeReviewCodeQuestionChain.invoke({ code })
+
+
+/* Session Summaray */
+
+const sessionSummaryPrompt = ChatPromptTemplate.fromTemplate(`
+    Erstelle für folgende Nachricht eine Zusammenfassung die ein Satz lang sein sollte
+    chatHistory: {chatHistory}
+    `)
+
+const sessionSummaryChain = sessionSummaryPrompt.pipe(llm).pipe(new StringOutputParser())
+const useSessionSummaryChain = async ({ chatHistory }) => sessionSummaryChain.invoke({ chatHistory })
+
+/* General Questions */
+
+const generalQuestionPrompt = ChatPromptTemplate.fromTemplate(`
+    Beantworte die folgende Frage des Users: {question}
+    chatHistory: {chatHistory}
+    `)
+
+const generalQuestionChain = generalQuestionPrompt.pipe(llm).pipe(new StringOutputParser())
+const useGeneralQuestionChain = async ({ question, chatHistory }) => generalQuestionChain.invoke({ question, chatHistory })
+
+const codeReviewChains = {
+    codeEval : useCodeReviewEvalChain,
+    codeFeedback : useCodeReviewFeedbackChain,
+    codeImprove : useCodeReviewImproveChain,
+    codeQuestion : useCodeReviewCodeQuestionChain,
+    sessionSummary : useSessionSummaryChain,
+    generalQuestion : useGeneralQuestionChain
+}
+
 
 
 
@@ -274,4 +366,5 @@ export {
     useCorrectorSubGoalSplitter,
     chatAgentTools,
     useGoalSummaryChain,
+    codeReviewChains
 }

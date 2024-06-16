@@ -25,19 +25,22 @@ z.object({
 
 
 
-const gpt35Turbo = "gpt-3.5-turbo"
+const gpt3 = "gpt-3.5-turbo"
+const gpt4 = "gpt-4o"
+
+const defaultLLM = gpt4
 
 
 
 
-const createOpenAI = ({ model = gpt35Turbo , temp = 0.2 } = { model:gpt35Turbo, temp: 0.2 }) => {
+const createOpenAI = ({ model = defaultLLM , temp = 0.2 } = { model:defaultLLM, temp: 0.2 }) => {
     return new OpenAI({
         openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
         temperature: temp,
         model: model
     });
 }
-const createChatOpenAI = ({ model = turbo, temp = 0 } = { model: turbo, temp: 0 }) => {
+const createChatOpenAI = ({ model = defaultLLM, temp = 0 } = { model: defaultLLM, temp: 0 }) => {
     return new ChatOpenAI({
         openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
         temperature: temp,
