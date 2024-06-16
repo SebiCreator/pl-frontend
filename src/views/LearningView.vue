@@ -31,6 +31,9 @@ import {
 } from "../utils/ChatSessionService.js";
 import { useUserDataStore } from "../store/userDataStore.js";
 import { storeToRefs } from "pinia";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -240,24 +243,7 @@ const helpActions = [
     isPath: true,
   },
 ];
-const codeReviewActions = [
-  {
-    titel: "Code verbessern",
-    prompt: "",
-  },
-  {
-    titel: "Code bewerten",
-    prompt: "",
-  },
-  {
-    titel: "Tipps geben",
-    prompt: "",
-  },
-  {
-    titel: "Zurück",
-    isPath: true,
-  },
-];
+
 const mainActions = [
   {
     titel: "Aufgabe",
@@ -311,7 +297,7 @@ const changeActions = (titel) => {
       actions.value = helpActions;
       break;
     case "Code Review":
-      actions.value = codeReviewActions;
+      router.push("/codeReview");
       break;
     default:
       actions.value = mainActions;
@@ -333,14 +319,12 @@ const submitAction = async (action) => {
     } else if (titel === "Code bewerten") {
       const _prompt = "Bewerte bitte den folgenden Code: \n" + editorCode.value;
       await callModel(_prompt);
-
-    } else if(titel === "Tipps geben") {
-      const _prompt = "Gib mir bitte Tipps zum folgenden Code: \n" + editorCode.value;
+    } else if (titel === "Tipps geben") {
+      const _prompt =
+        "Gib mir bitte Tipps zum folgenden Code: \n" + editorCode.value;
       await callModel(_prompt);
-    }
-     else {
+    } else {
       await callModel(prompt);
-
     }
   }
 };

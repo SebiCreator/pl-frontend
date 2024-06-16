@@ -1,6 +1,9 @@
 <script setup>
 import { useRouter } from "vue-router";
+import { ref } from "vue";
 import BackendConnectionBadge from "@/components/BackendConnectionBadge.vue";
+
+const showBadge = ref(false);
 
 
 const router = useRouter()
@@ -19,6 +22,10 @@ const goToLernen = () => {
 const goToLanding = () => {
   router.push("/");
 }
+
+const toCodeReview = () => {
+  router.push("/codeReview");
+}
 </script>
 <template>
 <div class="navbar bg-base-100 mb-10 border">
@@ -33,20 +40,21 @@ const goToLanding = () => {
         </li>
         <li><a @click="goToLernen">Lernen</a></li>
         <li><a @click="goToNewGoal">Ziel erstellen</a></li>
+        <li><a @click="toCodeReview">Code Review</a></li>
       </ul>
     </div>
     <a class="btn btn-ghost text-xl" @click="goToLanding">MyAppLogo</a>
   </div>
-  <div class="navbar-center hidden lg:flex">
+  <div class="navbar-center hidden lg:flex justify-around">
     <ul class="menu menu-horizontal px-1 mr-4">
       <li>
           <a @click="goToEinstellungen">Einstellungen</a>
       </li>
       <li><a @click="goToLernen">Lernen</a></li>
       <li><a @click="goToNewGoal">Ziel erstellen</a></li>
-
+      <li><a @click="toCodeReview">Code Review</a></li>
     </ul>
-    <BackendConnectionBadge/>
+    <BackendConnectionBadge v-if="showBadge"/>
   </div>
   <div class="navbar-end">
     <span class="btn mr-4">Testuser</span>
