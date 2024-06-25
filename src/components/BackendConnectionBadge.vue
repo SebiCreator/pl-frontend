@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from "vue";
-//import { state, socket } from "../socket";
 import axios from "axios";
 const apiIsAlive = ref(false);
 const wsIsAlive = ref(false);

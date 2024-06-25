@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeMount, ref, watch } from "vue";
+import { computed, onBeforeMount, ref, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import Editor from "../components/Editor.vue";
 import { createChatOpenAI } from "../utils/LLMService.js";
@@ -7,6 +7,7 @@ import { useUserDataStore } from "../store/userDataStore.js";
 import { storeToRefs } from "pinia";
 import { StructuredOutputParser } from "langchain/output_parsers";
 import { codeReviewChains } from "../utils/chains";
+import ChangePrefModal from "../components/ChangePrefModal.vue";
 import {
   HumanMessage,
   AIMessage,
@@ -17,6 +18,9 @@ import {
   ChatPromptTemplate,
 } from "@langchain/core/prompts";
 import { z } from "zod";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const systemPromptTemplate = `
     Du bist ein Tool das dem User bei Code Reviews hilft.
@@ -44,7 +48,10 @@ const promptTemplate = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("chatHistory"),
 ]);
 
-const { llmModel, temperature } = storeToRefs(useUserDataStore);
+const dataStore = useUserDataStore();
+const { llmModel, temperature, preferences } = storeToRefs(dataStore);
+
+console.log({ preferences });
 
 const model = createChatOpenAI();
 
@@ -62,6 +69,7 @@ const askQuestion = async (question, newCode = false) => {
 };
 
 const route = useRoute();
+const messageContainer = ref(null);
 const sessionId = route.params.sessionId || null;
 
 const chatHistory = ref([]);
@@ -153,13 +161,13 @@ const userHello = () => {
 };
 
 const onEmptyTopic = () => {
-  console.log({ t: topic.value })
-  if (topic.value === "" && true ){
+  console.log({ t: topic.value });
+  if (topic.value === "" && true) {
     codeReviewChains
       .sessionSummary({ chatHistory: chatHistoryString.value })
       .then((res) => {
         console.log(res);
-        topic.value = res
+        topic.value = res;
       })
       .catch((err) => {
         console.log(err);
@@ -167,7 +175,28 @@ const onEmptyTopic = () => {
   }
 };
 
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messages.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    }
+  });
+};
+
+watch(messages, (newMessages, oldMessages) => {
+  if (newMessages.length > oldMessages.length) {
+    scrollToBottom();
+  }
+});
+
+watch(questionLoading, (newLoading) => {
+  if (newLoading) {
+    scrollToBottom();
+  }
+});
+
 onBeforeMount(userHello);
+const openModal = () => document.getElementById("modal1").showModal();
 </script>
 
 <template>
@@ -177,6 +206,10 @@ onBeforeMount(userHello);
         {{ topic }}
       </h1>
     </div>
+    <button class="btn btn-primary" @click="openModal">
+      Ändere Präferenzen
+    </button>
+    <ChangePrefModal />
     <div class="flex justify-center h-screen">
       <div
         class="w-1/2 border flex items-center justify-center overflow-hidden rounded-lg"
@@ -184,7 +217,7 @@ onBeforeMount(userHello);
         <div class="border h-full w-full p-4 rounded-xl">
           <Editor
             v-model:code="code"
-            :vsCodeSync="vsCodeSync"
+            :vsCodeSync="true"
             @change="handleEditorChange"
           />
         </div>
@@ -194,7 +227,7 @@ onBeforeMount(userHello);
         class="w-1/2 flex flex-col justify-between items-center border rounded-lg"
       >
         <div class="w-full flex flex-col items-center h-full m-4">
-          <div class="border h-3/4 overflow-scroll mx-2">
+          <div ref="messageContainer" class="border max-h-3/4  overflow-scroll mx-2">
             <div
               v-for="msg in messages"
               :key="msg"

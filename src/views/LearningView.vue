@@ -32,6 +32,7 @@ import {
 import { useUserDataStore } from "../store/userDataStore.js";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
+import ChangePrefModal from "../components/ChangePrefModal.vue";
 
 const router = useRouter();
 
@@ -366,6 +367,8 @@ const changeTemperature = async (temp) => {
   await createAgent();
 };
 
+const openModal = () => document.getElementById("modal1").showModal();
+
 onBeforeMount(async () => {
   await createAgent();
   await startConversation();
@@ -377,7 +380,12 @@ onBeforeMount(async () => {
       <h1 class="text-lg m-3 border p-2">
         Thema: {{ subgoal || "No subgoal" }}
       </h1>
+      <ChangePrefModal />
+
       <button @click="resetConversation" class="btn">Reset Conversation</button>
+      <button class="btn btn-primary" @click="openModal">
+        Ändere Präferenzen
+      </button>
       <details class="dropdown">
         <summary class="m-1 btn">Temperature</summary>
         <ul

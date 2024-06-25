@@ -38,11 +38,14 @@ watch(() => props.code, (newCode) => {
 
 socket.on('messageToClient', (msg) => {
   console.log('Message from Server: ', msg);
+  console.log('vsCodeSync: ', vsCodeSync.value);
   if (!vsCodeSync.value) return;
   code.value = msg;
   console.log('Message from VsCode: ', msg);
   emit('update:code', msg); // Ensure sync with parent
 });
+
+
 
 const cmOptions = {
   mode: lang,
