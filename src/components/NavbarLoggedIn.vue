@@ -57,7 +57,7 @@ const toCodeReview = () => {
     <BackendConnectionBadge v-if="showBadge"/>
   </div>
   <div class="navbar-end">
-    <span class="btn mr-4">Testuser</span>
+    <span class="btn mr-4" @click="goToEinstellungen">Testuser</span>
   </div>
 </div>
     

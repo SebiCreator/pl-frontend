@@ -122,6 +122,7 @@ const sendMessage = async () => {
   const response = await codeReviewChains.generalQuestion({
     question: prompt.value,
     chatHistory: chatHistoryString.value,
+    userContext: dataStore.getUserContext()
   });
   chatHistory.value.push(new AIMessage(response));
   prompt.value = "";
@@ -152,10 +153,13 @@ const chatHistoryString = computed(() => {
   return chatHistory.value.map((msg) => msg.text).join("\n");
 });
 
-const userHello = () => {
+const userHello = async () => {
+  const result  = await codeReviewChains.userHello({
+    userContext: dataStore.getUserContext()
+  })
   chatHistory.value.push(
     new AIMessage(
-      "Hallo, ich bin dein Code Review Tool, zeige mir deinen Code dann kann ich dir helfen"
+      result
     )
   );
 };
@@ -227,7 +231,10 @@ const openModal = () => document.getElementById("modal1").showModal();
         class="w-1/2 flex flex-col justify-between items-center border rounded-lg"
       >
         <div class="w-full flex flex-col items-center h-full m-4">
-          <div ref="messageContainer" class="border max-h-3/4  overflow-scroll mx-2">
+          <div
+            ref="messageContainer"
+            class="border max-h-[600px] overflow-scroll mx-2"
+          >
             <div
               v-for="msg in messages"
               :key="msg"

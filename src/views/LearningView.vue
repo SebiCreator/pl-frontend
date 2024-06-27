@@ -50,8 +50,10 @@ const { llmModel, temperature } = storeToRefs(userDataStore);
 const createAgent = async () => {
   const prompt1 = ChatPromptTemplate.fromMessages([
     ("system", "Du bist ein Informatik Tutor und hilfst bei dem Thema {topic}"),
+    ("system", "Dieses Thema ist ein Unterthema des Themas: {mainTopic}"),
     ("system",
     "Alle Antworten sollen nur Text beinhalten kein, Code oder Markdown"),
+    ("system", "BenutzerKontext: {user_context}"),
     new MessagesPlaceholder("chat_history"),
     ("human", "{input}"),
     new MessagesPlaceholder("agent_scratchpad"),
@@ -164,6 +166,8 @@ const callModel = async (userMessage, save = true) => {
   const response = await agent.value.invoke({
     input: userMessage,
     topic: subgoal.value,
+    mainTopic: goalTopic.value,
+    user_context : userDataStore.getUserContext(),
     chat_history: chatHistory.value,
   });
   console.log({ response });

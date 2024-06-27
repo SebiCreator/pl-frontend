@@ -13,31 +13,58 @@ const fullGoal = store.userGoals.find((goal) => goal.topic === goalName);
 const goalTopic = fullGoal.topic;
 const subGoals = fullGoal.subgoals;
 const learn = (subgoalTopic) => {
-  console.log("----")
-  console.log({ s:subgoalTopic, g: goalTopic })
+  console.log("----");
+  console.log({ s: subgoalTopic, g: goalTopic });
   router.push({ name: "Learning", params: { subgoalTopic, goalTopic } });
 };
 console.log(fullGoal);
+
+const toTitleCase = (str) => {
+  return str.replace(
+    /\w\S*/g,
+    function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
+};
 </script>
 
 
 <template>
-  <div class="flex flex-row">
-    <div class="w-1/2 m-2 overflow-hidden rounded-lg">
-      {{ goalName }}
-      <div>
-        <ul class="steps steps-vertical">
-          <li
-            v-for="s in subGoals"
-            :key="s"
-            :class="{ step: true, 'step-primary': s.done }"
-            @click="learn(s.topic)"
+  <div>
+    <div class="flex flex-col items-center mb-6">
+      <h1 class="text-2xl bold underline my-4">{{ toTitleCase(goalName) }}</h1>
+      <p>{{ fullGoal.description }}</p>
+    </div>
+    <div class="flex flex-row">
+      <div class="w-1/2 m-2 overflow-hidden rounded-lg ml-6">
+        <div class="flex flex-row">
+          <ul
+            class="steps steps-vertical cursor-pointer border border-black border-solid p-4 rounded-lg"
           >
-            <span>{{ s.topic }}</span>
-          </li>
-        </ul>
+            <li
+              v-for="s in subGoals"
+              :key="s"
+              :class="{
+                step: true,
+                'hover:bg-primary-content': true,
+                'hover:underline': true,
+                'rounded-2xl': true,
+                'step-primary': s.done,
+              }"
+              @click="learn(s.topic)"
+            >
+              <span>{{ s.topic }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="w-1/2 overflow-hidden rounded-lg">
+        <div class="w-full h-full flex flex-col items-center">
+          <div class="flex">
+          </div>
+        </div>
       </div>
     </div>
-    <div class="w-1/2 overflow-hidden rounded-lg"></div>
   </div>
 </template>

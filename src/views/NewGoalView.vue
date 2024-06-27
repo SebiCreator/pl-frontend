@@ -1,7 +1,7 @@
 
 <script setup>
 import { ref } from "vue";
-import { useSubGoalSplitter ,useGoalSummaryChain  } from "../utils/chains.js";
+import { useSubGoalSplitter, useGoalSummaryChain } from "../utils/chains.js";
 import { useUserDataStore } from "@/store/userDataStore.js";
 import { storeToRefs } from "pinia";
 import GoalOverview from "../components/GoalOverview.vue";
@@ -43,19 +43,19 @@ async function saveGoal(subgoals) {
   console.log("Save Goal");
   console.log(subgoals);
   console.log(userPersonalData);
-  const goalDescription = await  useGoalSummaryChain({
+  const goalDescription = await useGoalSummaryChain({
     goal: topic.value,
-    subgoals: subgoals.map(s => s.name),
+    subgoals: subgoals.map((s) => s.name),
     focus: focus.value,
   });
   console.log({ goalDescription });
   const _subgoals = subgoals.map((s) => ({
-      topic: s.name,
-      description: s.description,
-      count: 0, // TODO
-      maxCount: 10, // TODO
-      difficulty: "easy", // TODO
-    }))
+    topic: s.name,
+    description: s.description,
+    count: 0, // TODO
+    maxCount: 10, // TODO
+    difficulty: "easy", // TODO
+  }));
   console.log({ _subgoals });
   const _goal = {
     topic: topic.value,
@@ -73,7 +73,10 @@ async function saveGoal(subgoals) {
 <template>
   <div>
     <div v-if="!isLoading">
-      <div v-if="showInput" class="max-w-md mx-auto mt-10 space-y-4">
+      <div
+        v-if="showInput"
+        class="max-w-md mx-auto mt-10 space-y-4 border-gray-400"
+      >
         <div>
           <label for="input" class="block text-sm font-medium text-gray-700"
             >Thema</label
@@ -82,7 +85,8 @@ async function saveGoal(subgoals) {
             id="input"
             v-model="topic"
             type="text"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Gib dein Thema ein das du Lernen möchtest ...."
+            class="input border-2 border-gray-300 w-full"
           />
         </div>
         <div>
@@ -91,15 +95,11 @@ async function saveGoal(subgoals) {
           >
           <textarea
             class="w-full textarea textarea-bordered"
+            placeholder="Beschreibe so genau wie möglich was du genau lernen willst am besten mit Programmiersprache ..."
             v-model="focus"
           ></textarea>
         </div>
-        <button
-          @click="submitForm"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          Submit
-        </button>
+        <button @click="submitForm" class="btn">Bestätigen</button>
       </div>
       <GoalOverview v-else :subgoals="steps" :goal="goal" @done="saveGoal" />
     </div>

@@ -66,14 +66,12 @@ const subGoalSplitterPrompt = ChatPromptTemplate.fromTemplate(`
     Es soll bei allen Teilzielen so gut es geht der Kontext des Ziels und der Beschreibung eingehen
     Wenn der User Input nicht sinnvoll ist soll ein leeres JSON Objekt zurückgegeben werden.
     Format Instructions: {format_instructions}
-    Sprace der der Json Datei: {language}
 `)
-
 const subGoalSplitterChain = subGoalSplitterPrompt.pipe(llm).pipe(subGoalSplitterParser)
 
 
-const useSubGoalSplitter = async ({ goal, description, language }) => {
-    return subGoalSplitterChain.invoke({ goal, description, language, format_instructions: subGoalSplitterParser.getFormatInstructions() })
+const useSubGoalSplitter = async ({ goal, description }) => {
+    return subGoalSplitterChain.invoke({ goal, description, format_instructions: subGoalSplitterParser.getFormatInstructions() })
 }
 
 
@@ -273,7 +271,7 @@ const codeReviewEvalPrompt = ChatPromptTemplate.fromTemplate(`
 `)
 
 const codeReviewEvalChain = codeReviewEvalPrompt.pipe(llm).pipe(new StringOutputParser())
-const useCodeReviewEvalChain = async ({ code }) => codeReviewEvalChain.invoke({ code })
+const useCodeReviewEvalChain = async ({ code, userContext="{}" }) => codeReviewEvalChain.invoke({ code, userContext })
 
 /* Tipps geben */
 const codeReviewFeedbackPrompt = ChatPromptTemplate.fromTemplate(`
@@ -281,6 +279,7 @@ const codeReviewFeedbackPrompt = ChatPromptTemplate.fromTemplate(`
     Der User hat dir folgenden Code geschickt: {code}
     Ignoriere fehler bei der Einrückung
     Bitte gib dem User Feedback was er verbessern kann.
+    Benutzerkontext: {userContext}
 `)
 
 const codeMessageSplitOutputParser = StructuredOutputParser.fromZodSchema(
@@ -292,7 +291,7 @@ const codeMessageSplitOutputParser = StructuredOutputParser.fromZodSchema(
 
 const codeReviewFeedbackChain = codeReviewFeedbackPrompt.pipe(llm).pipe(new StringOutputParser())
 
-const useCodeReviewFeedbackChain = async ({ code }) => codeReviewFeedbackChain.invoke({ code })
+const useCodeReviewFeedbackChain = async ({ code, userContext="{}" }) => codeReviewFeedbackChain.invoke({ code, userContext })
 
 
 /* Code verbessern */
@@ -301,12 +300,13 @@ const codeReviewImprovePrompt = ChatPromptTemplate.fromTemplate(`
     Der User hat dir folgenden Code geschickt: {code}
     Ignoriere fehler bei der Einrückung
     Bitte verbessere den Code des Users und schreibe eine message an den User was du verbessert hast.
+    Benutzer Kontext : {userContext}
     Format Instructions: {format_instructions}
 `)
 
 const codeReviewImproveChain = codeReviewImprovePrompt.pipe(llm).pipe(codeMessageSplitOutputParser)
 
-const useCodeReviewImproveChain = async ({ code }) => codeReviewImproveChain.invoke({ code, format_instructions: codeMessageSplitOutputParser.getFormatInstructions() })
+const useCodeReviewImproveChain = async ({ code, userContext="{}" }) => codeReviewImproveChain.invoke({ code, userContext, format_instructions: codeMessageSplitOutputParser.getFormatInstructions() })
 
 
 
@@ -317,32 +317,46 @@ const codeReviewCodeQuestionPrompt = ChatPromptTemplate.fromTemplate(`
     Ignoriere fehler bei der Einrückung
     Stelle dem User eine Frage zu seinem Code.
     Dies soll eine Frage sein die testet ob der User den Code wirklich verstanden hat
+    Benutzer Kontext: {userContext}
     `)
 
 
 const codeReviewCodeQuestionChain = codeReviewCodeQuestionPrompt.pipe(llm).pipe(new StringOutputParser())
-const useCodeReviewCodeQuestionChain = async ({ code }) => codeReviewCodeQuestionChain.invoke({ code })
+const useCodeReviewCodeQuestionChain = async ({ code, userContext="{}" }) => codeReviewCodeQuestionChain.invoke({ code, userContext })
 
 
 /* Session Summaray */
 
 const sessionSummaryPrompt = ChatPromptTemplate.fromTemplate(`
     Erstelle für folgende Nachricht eine Zusammenfassung die ein Satz lang sein sollte
+    Benutzer Kontext: {userContext}
     chatHistory: {chatHistory}
     `)
 
 const sessionSummaryChain = sessionSummaryPrompt.pipe(llm).pipe(new StringOutputParser())
-const useSessionSummaryChain = async ({ chatHistory }) => sessionSummaryChain.invoke({ chatHistory })
+const useSessionSummaryChain = async ({ chatHistory, userContext="{}" }) => sessionSummaryChain.invoke({ chatHistory, userContext })
 
 /* General Questions */
 
 const generalQuestionPrompt = ChatPromptTemplate.fromTemplate(`
     Beantworte die folgende Frage des Users: {question}
+    KontextInformation des Users: {userContext}
     chatHistory: {chatHistory}
+    Benutzer Kontext: {userContext}
     `)
 
 const generalQuestionChain = generalQuestionPrompt.pipe(llm).pipe(new StringOutputParser())
-const useGeneralQuestionChain = async ({ question, chatHistory }) => generalQuestionChain.invoke({ question, chatHistory })
+const useGeneralQuestionChain = async ({ question, chatHistory,userContext="{}" }) => generalQuestionChain.invoke({ question, chatHistory, userContext })
+
+
+const helloUserPrompt2 = ChatPromptTemplate.fromTemplate(`
+    Benutze Kontextinformationen des Users um folgenden Willkommenspruch zu verbesser:
+    Hallo, ich bin dein Code Review Tool, zeige mir deinen Code dann kann ich dir helfen
+    Benutzer Kontext: {userContext}
+`)
+
+const helloUserChain2 = helloUserPrompt2.pipe(llm).pipe(new StringOutputParser())
+const useHelloUserChain2 = async ({ userContext="{}" }) => helloUserChain2.invoke({ userContext })
 
 const codeReviewChains = {
     codeEval : useCodeReviewEvalChain,
@@ -350,9 +364,9 @@ const codeReviewChains = {
     codeImprove : useCodeReviewImproveChain,
     codeQuestion : useCodeReviewCodeQuestionChain,
     sessionSummary : useSessionSummaryChain,
-    generalQuestion : useGeneralQuestionChain
+    generalQuestion : useGeneralQuestionChain,
+    userHello : useHelloUserChain2
 }
-
 
 
 

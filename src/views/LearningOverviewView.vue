@@ -29,6 +29,7 @@ const toCodeReview = () => router.push("/codeReview");
         <LearningCard
           :title="goal.topic"
           :content="goal.description"
+          :subgoals="goal.subgoals"
           @click="toGoal(goal.topic)"
         />
       </div>

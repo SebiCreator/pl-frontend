@@ -8,6 +8,10 @@ const router = useRouter();
 const dataStore = useUserDataStore();
 const { preferences } = storeToRefs(dataStore);
 
+const savePref = () => {
+  dataStore.setPreferences({ newPreferences: preferences.value ,email : dataStore.userPersonalData.value});
+};
+
 
 </script>
 
@@ -20,7 +24,7 @@ const { preferences } = storeToRefs(dataStore);
         class="w-full p-2 border border-gray-300 rounded"
       ></textarea>
       <div class="flex flex-row">
-        <button class="btn mr-3">Speichern</button>
+        <button @click="savePref" class="btn mr-3">Speichern</button>
         <button class="btn" @click="router.push('/settings')">
           Einstellungen
         </button>

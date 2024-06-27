@@ -22,12 +22,12 @@ const changeSubgoals = async () => {
     goal: goal.value,
     subgoals: JSON.stringify(subgoals.value),
     changes: changes.value,
-    language: "de",
   });
   subgoals.value = result.subgoals;
   goal.value = result.goal;
   console.log({ goal, subgoals })
   console.log(result);
+  changes.value = "";
 };
 
 </script>
@@ -37,10 +37,10 @@ const changeSubgoals = async () => {
     <ul class="steps steps-vertical">
       <li v-for="e in subgoals" :key="e.name" class="step">{{ e.name }}</li>
     </ul>
-    <div class="flex flex-row justify-between items-center">
-      <button class="btn" @click="done">Gut so</button>
-      <input type="text" placeholder="Änderungen.." v-model="changes" />
-      <button @click="changeSubgoals">Ändern</button>
+    <div class="flex flex-col justify-between ">
+      <button class="btn mb-3" @click="done">Gut so</button>
+      <button class="btn mb-3" @click="changeSubgoals">Ändern</button>
+      <textarea class="textarea"  placeholder="Änderungen.." v-model="changes" />
     </div>
   </div>
 </template>

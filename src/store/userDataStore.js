@@ -39,6 +39,21 @@ export const useUserDataStore = defineStore('userDataStore', () => {
     return !!localStorage.getItem('userPersonalData')
   }
 
+  function getUserContext() {
+    console.log({
+      username: userPersonalData.value.name,
+      occupation: userPersonalData.value.occupation,
+      language: userPersonalData.value.language,
+      personalPreferences: preferences.value,
+    })
+    return JSON.stringify({
+      username: userPersonalData.value.name,
+      occupation: userPersonalData.value.occupation,
+      language: userPersonalData.value.language,
+      "persönliche Wünsche des Benutzers": preferences.value,
+    })
+  }
+
   async function loadAll({ email }) {
     if (isInLocalStorage()) {
       logger.log('Loading from local storage')
@@ -66,7 +81,7 @@ export const useUserDataStore = defineStore('userDataStore', () => {
     console.log('newPreferences:', newPreferences)
     console.log('email:', email)
     preferences.value = newPreferences
-    await axios.post(`${apiURL}/preferences`, { newPreferences, email })
+    await axios.post(`${apiURL}/preferences`, { summary: newPreferences, email })
       .then(response => logger.log(response))
       .catch(error => logger.error(error))
       .finally(saveToLocalStorage())
@@ -107,5 +122,5 @@ export const useUserDataStore = defineStore('userDataStore', () => {
       .catch(error => logger.error(error))
   }
 
-  return { userGoals, userPersonalData, llmModel, temperature,preferences, loadPreferences, setPreferences, loadGoals, setGoal, loadPersonalData, setPersonalData, loadAll }
+  return { userGoals, userPersonalData, llmModel, temperature, preferences, loadPreferences, setPreferences, loadGoals, setGoal, loadPersonalData, setPersonalData, loadAll, getUserContext }
 })
