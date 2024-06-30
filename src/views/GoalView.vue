@@ -1,7 +1,7 @@
 <script setup>
 import { useRoute } from "vue-router";
 import { useRouter } from "vue-router";
-import { ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { useUserDataStore } from "../store/userDataStore.js";
 
 const route = useRoute();
@@ -17,7 +17,6 @@ const learn = (subgoalTopic) => {
   console.log({ s: subgoalTopic, g: goalTopic });
   router.push({ name: "Learning", params: { subgoalTopic, goalTopic } });
 };
-console.log(fullGoal);
 
 const toTitleCase = (str) => {
   return str.replace(
@@ -27,6 +26,7 @@ const toTitleCase = (str) => {
     }
   );
 };
+
 </script>
 
 
@@ -50,7 +50,7 @@ const toTitleCase = (str) => {
                 'hover:bg-primary-content': true,
                 'hover:underline': true,
                 'rounded-2xl': true,
-                'step-primary': s.done,
+                'step-primary': s.chatSessionId,
               }"
               @click="learn(s.topic)"
             >

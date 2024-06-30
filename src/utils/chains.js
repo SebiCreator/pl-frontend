@@ -211,7 +211,7 @@ const askQuestionTool = new DynamicStructuredTool({
 
 
 const resolveAskQuestionPrompt = ChatPromptTemplate.fromTemplate(`
-    Du bist ein Tutor für Programmieren.
+    Du bist ein Tutor für Programmieranfänger.
     Für das Thema {topic} hast du dem User folgende Frage gestellt: {question}
     Der User hat die Frage so beantwortet: {answer}
     Gib dem User Feedback ob er die Frage richtig beantwortet hat.
@@ -237,28 +237,14 @@ const resolveAskQuestionTool = new DynamicStructuredTool({
 
 
 
-const codeReviewPrompt = ChatPromptTemplate.fromTemplate(`
-    Du bist ein Tutor für Programmieren.
-    Der User hat dir folgenden Code geschickt: {code}
-    Bitte gib dem User Feedback ob der Code richtig ist und wenn nicht was er ändern muss.
-`)
-
-const codeReviewChain = codeReviewPrompt.pipe(llm)
-const useCodeReviewChain = async ({ code }) => codeReviewChain.invoke({ code })
-
-
-const codeReviewTool = new DynamicStructuredTool({
-    name: "codeReview",
-    schema: z.object({
-        code: z.string().describe("The code that the user provided").default(""),
-    }),
-    description: "Reviews the code that the user provided",
-    func: async ({ code }) => useCodeReviewChain({ code }),
-})
 
 
 
-const chatAgentTools = [findErrorTool, resolveFindErrorTool, askQuestionTool, resolveAskQuestionTool, codeReviewTool]
+const chatAgentTools = [findErrorTool,
+                        resolveFindErrorTool, 
+                        askQuestionTool,
+                        resolveAskQuestionTool,
+                        ]
 
 
 /* END AGENT TOOLS  ---- BEGIN REVIEW CHAINS */
@@ -271,7 +257,7 @@ const codeReviewEvalPrompt = ChatPromptTemplate.fromTemplate(`
 `)
 
 const codeReviewEvalChain = codeReviewEvalPrompt.pipe(llm).pipe(new StringOutputParser())
-const useCodeReviewEvalChain = async ({ code, userContext="{}" }) => codeReviewEvalChain.invoke({ code, userContext })
+const useCodeReviewEvalChain = async ({ code, userContext = "{}" }) => codeReviewEvalChain.invoke({ code, userContext })
 
 /* Tipps geben */
 const codeReviewFeedbackPrompt = ChatPromptTemplate.fromTemplate(`
@@ -291,7 +277,7 @@ const codeMessageSplitOutputParser = StructuredOutputParser.fromZodSchema(
 
 const codeReviewFeedbackChain = codeReviewFeedbackPrompt.pipe(llm).pipe(new StringOutputParser())
 
-const useCodeReviewFeedbackChain = async ({ code, userContext="{}" }) => codeReviewFeedbackChain.invoke({ code, userContext })
+const useCodeReviewFeedbackChain = async ({ code, userContext = "{}" }) => codeReviewFeedbackChain.invoke({ code, userContext })
 
 
 /* Code verbessern */
@@ -306,7 +292,7 @@ const codeReviewImprovePrompt = ChatPromptTemplate.fromTemplate(`
 
 const codeReviewImproveChain = codeReviewImprovePrompt.pipe(llm).pipe(codeMessageSplitOutputParser)
 
-const useCodeReviewImproveChain = async ({ code, userContext="{}" }) => codeReviewImproveChain.invoke({ code, userContext, format_instructions: codeMessageSplitOutputParser.getFormatInstructions() })
+const useCodeReviewImproveChain = async ({ code, userContext = "{}" }) => codeReviewImproveChain.invoke({ code, userContext, format_instructions: codeMessageSplitOutputParser.getFormatInstructions() })
 
 
 
@@ -322,7 +308,7 @@ const codeReviewCodeQuestionPrompt = ChatPromptTemplate.fromTemplate(`
 
 
 const codeReviewCodeQuestionChain = codeReviewCodeQuestionPrompt.pipe(llm).pipe(new StringOutputParser())
-const useCodeReviewCodeQuestionChain = async ({ code, userContext="{}" }) => codeReviewCodeQuestionChain.invoke({ code, userContext })
+const useCodeReviewCodeQuestionChain = async ({ code, userContext = "{}" }) => codeReviewCodeQuestionChain.invoke({ code, userContext })
 
 
 /* Session Summaray */
@@ -334,7 +320,7 @@ const sessionSummaryPrompt = ChatPromptTemplate.fromTemplate(`
     `)
 
 const sessionSummaryChain = sessionSummaryPrompt.pipe(llm).pipe(new StringOutputParser())
-const useSessionSummaryChain = async ({ chatHistory, userContext="{}" }) => sessionSummaryChain.invoke({ chatHistory, userContext })
+const useSessionSummaryChain = async ({ chatHistory, userContext = "{}" }) => sessionSummaryChain.invoke({ chatHistory, userContext })
 
 /* General Questions */
 
@@ -346,7 +332,7 @@ const generalQuestionPrompt = ChatPromptTemplate.fromTemplate(`
     `)
 
 const generalQuestionChain = generalQuestionPrompt.pipe(llm).pipe(new StringOutputParser())
-const useGeneralQuestionChain = async ({ question, chatHistory,userContext="{}" }) => generalQuestionChain.invoke({ question, chatHistory, userContext })
+const useGeneralQuestionChain = async ({ question, chatHistory, userContext = "{}" }) => generalQuestionChain.invoke({ question, chatHistory, userContext })
 
 
 const helloUserPrompt2 = ChatPromptTemplate.fromTemplate(`
@@ -356,16 +342,16 @@ const helloUserPrompt2 = ChatPromptTemplate.fromTemplate(`
 `)
 
 const helloUserChain2 = helloUserPrompt2.pipe(llm).pipe(new StringOutputParser())
-const useHelloUserChain2 = async ({ userContext="{}" }) => helloUserChain2.invoke({ userContext })
+const useHelloUserChain2 = async ({ userContext = "{}" }) => helloUserChain2.invoke({ userContext })
 
 const codeReviewChains = {
-    codeEval : useCodeReviewEvalChain,
-    codeFeedback : useCodeReviewFeedbackChain,
-    codeImprove : useCodeReviewImproveChain,
-    codeQuestion : useCodeReviewCodeQuestionChain,
-    sessionSummary : useSessionSummaryChain,
-    generalQuestion : useGeneralQuestionChain,
-    userHello : useHelloUserChain2
+    codeEval: useCodeReviewEvalChain,
+    codeFeedback: useCodeReviewFeedbackChain,
+    codeImprove: useCodeReviewImproveChain,
+    codeQuestion: useCodeReviewCodeQuestionChain,
+    sessionSummary: useSessionSummaryChain,
+    generalQuestion: useGeneralQuestionChain,
+    userHello: useHelloUserChain2
 }
 
 

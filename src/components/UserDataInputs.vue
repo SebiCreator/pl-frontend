@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="max-w-md mx-auto mt-10">
-      <h1 class="text-2xl font-bold mb-6">Benutzer Einstellungen</h1>
       <form @submit.prevent="submitForm" class="space-y-4">
         <div>
           <label for="email" class="block font-semibold">Email:</label>
@@ -87,39 +86,41 @@
             class="input input-bordered w-full"
           />
         </div>
-        <button type="submit" class="btn btn-primary w-full">Submit</button>
+        <button type="submit" class="btn btn-primary w-full">Einstellungen bestätigen</button>
       </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, toRefs, ref } from "vue";
+import { reactive, toRefs, ref,watch } from "vue";
 import { useUserDataStore } from "@/store/userDataStore";
 import { storeToRefs } from "pinia";
+import { useRouter } from "vue-router";
+const router = useRouter();
 const dataStore = useUserDataStore();
 const { userPersonalData, preferences } = storeToRefs(dataStore);
-console.log("userPersonalData!!!!!!!:", userPersonalData.value);
-console.log("preferences:", preferences.value);
+
+
 
 
 const user = reactive({
-  email: userPersonalData.value.email || "",
+  email: userPersonalData.value.email || "test@test.de",
   name: userPersonalData.value.name || "",
-  age: userPersonalData.value.age || -1,
+  age: userPersonalData.value.age || 0,
   motivation: userPersonalData.value.motivation || "",
   occupation: userPersonalData.value.occupation || "",
   language: userPersonalData.value.language || "de",
 });
 
+
 const submitForm = async () => {
-  console.log("Submitting:", user);
-  console.log("Preferences:", preferences.value);
   await dataStore.setPersonalData(user);
   await dataStore.setPreferences({
     newPreferences: preferences.value,
     email: user.email,
   });
+  router.push("/")
 
   console.log({context: dataStore.getUserContext()})
 };

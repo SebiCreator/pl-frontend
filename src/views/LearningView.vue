@@ -100,14 +100,21 @@ const chatMessageToJson = (msg) => {
 };
 
 const saveChatHistory = async () => {
+  console.log("SAVING CHAT HISTORY")
   const conv = chatHistory.value;
   if (conv.length === 0) {
     return;
   }
   const formatted = conv.map(chatMessageToJson);
   if (chatHistoryId.value) {
+    console.log("updating chat history");
     await saveChatSession({ id: chatHistoryId.value, messages: formatted });
   } else {
+    if(subgoalData.value.chatSessionId){
+      console.log("No chat session id");
+      return;
+    }
+    console.log("creating chat history");
     const id = uuidv4();
     await saveChatSession({ id, messages: formatted });
     chatHistoryId.value = id;
@@ -120,16 +127,25 @@ const subgoalData = ref();
 
 const loadSubgoalData = () => {
   const goals = userDataStore.userGoals;
+  console.log({ goals });
   const goal = goals.find((g) => g.topic === goalTopic.value);
   const _subgoal = goal.subgoals.find((s) => s.topic === subgoal.value);
   subgoalData.value = _subgoal;
 };
 
 const loadChatHistory = async () => {
+  console.log("loading chat history");
+  await userDataStore.loadGoals({
+    email: userDataStore.userPersonalData.email,
+  });
+  loadSubgoalData();
+  console.log("SubgoalData:", subgoalData.value);
+  console.log(subgoalData.value.chatSessionId);
   if (subgoalData.value.chatSessionId) {
     const chatSession = await getChatSession({
       id: subgoalData.value.chatSessionId,
     });
+    console.log({ chatSession });
     chatHistoryId.value = subgoalData.value.chatSessionId;
     const cs = chatSession.messages.map((m) => {
       if (m.role === "human") {
@@ -147,15 +163,20 @@ const loadChatHistory = async () => {
 
 const updateSubgoal = async () => {
   const url = `${backendURL}/subgoal`;
-  const result = await axios.post(url, {
-    email: userDataStore.userPersonalData.email,
-    topic: goalTopic.value,
-    subgoalTopic: subgoal.value,
-    count: subgoalData.value.count,
-    maxCount: subgoalData.value.maxCount,
-    chatSessionId: chatHistoryId.value,
-    difficulty: subgoalData.value.difficulty,
-  });
+  try {
+    const result = await axios.post(url, {
+      email: userDataStore.userPersonalData.email,
+      topic: goalTopic.value,
+      subgoalTopic: subgoal.value,
+      count: subgoalData.value.count,
+      maxCount: subgoalData.value.maxCount,
+      chatSessionId: chatHistoryId.value,
+      difficulty: subgoalData.value.difficulty,
+    });
+    console.log("updated subgoal", result.data);
+  } catch (error) {
+    console.log({ error });
+  }
 };
 
 const callModel = async (userMessage, save = true) => {
@@ -167,7 +188,7 @@ const callModel = async (userMessage, save = true) => {
     input: userMessage,
     topic: subgoal.value,
     mainTopic: goalTopic.value,
-    user_context : userDataStore.getUserContext(),
+    user_context: userDataStore.getUserContext(),
     chat_history: chatHistory.value,
   });
   console.log({ response });
@@ -444,7 +465,7 @@ onBeforeMount(async () => {
         class="w-1/2 flex flex-col justify-between items-center border rounded-lg"
       >
         <div class="w-full flex flex-col items-center h-full m-4">
-          <div class="border h-3/4 overflow-scroll mx-2">
+          <div class="border overflow-scroll mx-2">
             <div
               v-for="msg in messages"
               :key="msg"

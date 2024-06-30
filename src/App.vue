@@ -8,15 +8,16 @@ import { useUserDataStore } from "@/store/userDataStore.js";
 
 const examplePref = {
   email: "test@test.de",
-  summary: "test",
-  testTypes: ["Q&A", "Flashcards"],
+  newPreferences : "Keine Präferenzen",
 };
 const examplePersonalData = {
   email: "test@test.de",
-  name: "Max",
-  age: 20,
-  motivation: "learning",
-  occupation: "student",
+  name: "-",
+  age: 0,
+  motivation: "",
+  occupation: "",
+  gender: "",
+  langugage: "",
 };
 const exampleGoal = {
     "email": "test@test.de",
@@ -56,7 +57,10 @@ const exampleGoal = {
 
 const dataStore = useUserDataStore();
 
+
 const onLoad = async () => {
+  //await dataStore.setPreferences(examplePref);
+  //await dataStore.setPersonalData(examplePersonalData);
   await dataStore.loadAll({ email: "test@test.de" });
 };
 

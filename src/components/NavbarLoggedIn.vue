@@ -43,7 +43,7 @@ const toCodeReview = () => {
         <li><a @click="toCodeReview">Code Review</a></li>
       </ul>
     </div>
-    <a class="btn btn-ghost text-xl" @click="goToLanding">MyAppLogo</a>
+    <a class="btn btn-ghost text-xl" @click="goToLanding">Personalisiertes Lernen</a>
   </div>
   <div class="navbar-center hidden lg:flex justify-around">
     <ul class="menu menu-horizontal px-1 mr-4">

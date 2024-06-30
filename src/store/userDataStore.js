@@ -22,7 +22,7 @@ export const useUserDataStore = defineStore('userDataStore', () => {
     localStorage.setItem('userPersonalData', JSON.stringify(userPersonalData.value))
     localStorage.setItem('llm', JSON.stringify({ llmModel: llmModel.value, temperature: temperature.value }))
     localStorage.setItem('preferences', preferences.value)
-    console.log('Saved to local storage')
+    logger.log('Saved to local storage')
   }
 
   function loadFromLocalStorage() {
@@ -35,12 +35,11 @@ export const useUserDataStore = defineStore('userDataStore', () => {
   }
 
   function isInLocalStorage() {
-    //return !!localStorage.getItem('userPreferences') && !!localStorage.getItem('userGoals') && !!localStorage.getItem('userPersonalData') && !!localStorage.getItem('llm') && !!localStorage.getItem('preferences')
     return !!localStorage.getItem('userPersonalData')
   }
 
   function getUserContext() {
-    console.log({
+    logger.log({
       username: userPersonalData.value.name,
       occupation: userPersonalData.value.occupation,
       language: userPersonalData.value.language,
@@ -71,15 +70,15 @@ export const useUserDataStore = defineStore('userDataStore', () => {
     await axios.get(`${apiURL}/preferences`, { params: { email } })
       .then(response => {
         logger.log(response)
-        preferences.value = response.data
+        preferences.value = response.data === "Failed" ? "" : response.data
         saveToLocalStorage()
       })
       .catch(error => logger.error(error))
   }
 
   async function setPreferences({ newPreferences, email }) {
-    console.log('newPreferences:', newPreferences)
-    console.log('email:', email)
+    logger.log('newPreferences:', newPreferences)
+    logger.log('email:', email)
     preferences.value = newPreferences
     await axios.post(`${apiURL}/preferences`, { summary: newPreferences, email })
       .then(response => logger.log(response))
@@ -88,13 +87,15 @@ export const useUserDataStore = defineStore('userDataStore', () => {
   }
 
   async function loadGoals({ email }) {
+    console.log("LOADING GOALS")
     await axios.get(`${apiURL}/goals`, { params: { email } })
       .then(response => {
         logger.log(response)
+        console.log("RESPONSE DATA:", response.data)
         userGoals.value = response.data
+        saveToLocalStorage()
       })
       .catch(error => logger.error(error))
-      .finally(saveToLocalStorage())
   }
   async function setGoal({ email, topic, description, focus = "", subgoals }) {
     userGoals.value.push({ email, topic, description, focus, subgoals })
